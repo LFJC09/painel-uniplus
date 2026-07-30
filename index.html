@@ -947,7 +947,7 @@
             <div class="table-filter-row"><input type="text" id="filtroNF" placeholder="Filtrar por nota, fornecedor ou produto..."></div>
             <div class="table-scroll">
               <table id="tblNF" data-tablekey="NF">
-                <thead><tr><th class="chk-col"><input type="checkbox" id="selAllNF" onchange="toggleSelectAll('NF', this.checked)"></th><th data-sort="dataEntrada">Data entrada</th><th data-sort="numeroNotaFiscal">Nota</th><th data-sort="modelo">Modelo</th><th data-sort="fornecedorNome">Fornecedor</th><th data-sort="produto">Produto</th><th class="num" data-sort="quantidade">Qtd</th><th class="num" data-sort="valorTotal">Valor total</th></tr></thead>
+                <thead><tr><th class="chk-col"><input type="checkbox" id="selAllNF" onchange="toggleSelectAll('NF', this.checked)"></th><th data-sort="dataEntrada">Data entrada</th><th data-sort="numeroNotaFiscal">Nota</th><th data-sort="modelo">Modelo</th><th data-sort="fornecedorNome">Fornecedor</th><th data-sort="produto">Produto</th><th class="num" data-sort="quantidade">Qtd</th><th class="num" data-sort="precoUnit">Preço unit.</th><th class="num" data-sort="valorTotal">Valor total</th></tr></thead>
                 <tbody></tbody>
               </table>
             </div>
@@ -1783,8 +1783,8 @@ function renderNFTable(rows){
     '<tr data-rowkey="NF-'+r._id+'" class="'+(tableSelection.NF.has(r._id)?'row-selected':'')+'">'+
     '<td class="chk-col"><input type="checkbox" class="rowchk-NF" data-id="'+r._id+'" '+(tableSelection.NF.has(r._id)?'checked':'')+' onchange="toggleRowSelection(\'NF\', '+r._id+', this.checked)"></td>'+
     '<td>'+fmtDate(r.dataEntrada)+'</td><td>'+esc(r.numeroNotaFiscal||'—')+'</td><td>'+esc(r.modelo||'—')+'</td><td>'+esc(r.fornecedorNome||'—')+'</td>'+
-    '<td>'+esc(r.produtoDescricao||r.produtoCodigo||'—')+'</td><td class="num">'+fmtNum(qtyNF(r))+'</td><td class="num">'+fmtMoney(r.valorTotal)+'</td></tr>'
-  ).join('') || '<tr><td colspan="8" class="empty-note">Nenhuma nota de fornecedor encontrada.</td></tr>';
+    '<td>'+esc(r.produtoDescricao||r.produtoCodigo||'—')+'</td><td class="num">'+fmtNum(qtyNF(r))+'</td><td class="num">'+fmtMoney(r.precoUnitario)+'</td><td class="num">'+fmtMoney(r.valorTotal)+'</td></tr>'
+  ).join('') || '<tr><td colspan="9" class="empty-note">Nenhuma nota de fornecedor encontrada.</td></tr>';
 }
 
 function stampAllTimestamps(){
@@ -1851,8 +1851,8 @@ document.getElementById('exportOS').addEventListener('click', ()=>{
 });
 document.getElementById('exportNF').addEventListener('click', ()=>{
   const rows = getExportRows('NF');
-  const csv = toCSV(rows, ['DataEntrada','NumeroNota','Modelo','Fornecedor','Produto','Quantidade','ValorTotal'],
-    r=>[fmtDate(r.dataEntrada),r.numeroNotaFiscal,r.modelo,r.fornecedorNome,r.produtoDescricao||r.produtoCodigo,qtyNF(r),r.valorTotal]);
+  const csv = toCSV(rows, ['DataEntrada','NumeroNota','Modelo','Fornecedor','Produto','Quantidade','PrecoUnitario','ValorTotal'],
+    r=>[fmtDate(r.dataEntrada),r.numeroNotaFiscal,r.modelo,r.fornecedorNome,r.produtoDescricao||r.produtoCodigo,qtyNF(r),r.precoUnitario||0,r.valorTotal]);
   downloadCSV(csv, 'notas_fornecedor' + exportSuffix('NF', (window.__nfRowsFull||[]).length) + '.csv');
 });
 
@@ -1861,7 +1861,7 @@ const VENDAS_HEADERS = ['Data','DAV','Cliente','Vendedor','Código','Produto','Q
 const FIN_HEADERS = ['Documento','Entidade','Tipo','Emissão','Vencimento','Valor','Saldo','Status'];
 const DOC_HEADERS = ['Código','Data','Cliente','Vendedor','Valor','Status'];
 const OS_HEADERS = ['Código','Data','Cliente','Atendente','Produtos','Serviços','Total','Status'];
-const NF_HEADERS = ['Data entrada','Nota','Modelo','Fornecedor','Produto','Qtd','Valor total'];
+const NF_HEADERS = ['Data entrada','Nota','Modelo','Fornecedor','Produto','Qtd','Preço unit.','Valor total'];
 
 function buildVendasRowsRaw(){
   return getExportRows('Vendas').map(r=>[fmtDate(r.data), r.dav, r.cliente, r.vendedor, r.produto, r.produtoNome || r.produto, r.qtd||0, r.precoUnit||0, r.total||0]);
@@ -1879,7 +1879,7 @@ function buildOSRowsRaw(arr){
   return arr.map(o=>[o.codigo, fmtDate(o.dataOrdemServico||o.data), o.nomeCliente||'', o.nomeAtendente||'', o.valorProdutos||0, o.valorServicos||0, o.valor||0, STATUS_OS[o.status]||o.status]);
 }
 function buildNFRowsRaw(arr){
-  return arr.map(r=>[fmtDate(r.dataEntrada), r.numeroNotaFiscal||'', r.modelo||'', r.fornecedorNome||'', r.produtoDescricao||r.produtoCodigo||'', qtyNF(r), r.valorTotal||0]);
+  return arr.map(r=>[fmtDate(r.dataEntrada), r.numeroNotaFiscal||'', r.modelo||'', r.fornecedorNome||'', r.produtoDescricao||r.produtoCodigo||'', qtyNF(r), r.precoUnitario||0, r.valorTotal||0]);
 }
 function buildResumoRows(){
   const davs = state.davs;
@@ -1985,7 +1985,7 @@ wireTableExport('Fin', FIN_HEADERS, buildFinRowsRaw, [5,6], [], 'financeiro', 'D
 wireTableExport('Pedidos', DOC_HEADERS, ()=>buildDocRowsRaw(getExportRows('Pedidos')), [4], [], 'pedidos_de_venda', 'Pedidos de venda', ()=>(window.__pedidosRowsFull||[]).length);
 wireTableExport('Orc', DOC_HEADERS, ()=>buildDocRowsRaw(getExportRows('Orc')), [4], [], 'orcamentos', 'Orçamentos', ()=>(window.__orcRowsFull||[]).length);
 wireTableExport('OS', OS_HEADERS, ()=>buildOSRowsRaw(getExportRows('OS')), [4,5,6], [], 'ordens_de_servico', 'Ordens de serviço', ()=>(window.__osRowsFull||[]).length);
-wireTableExport('NF', NF_HEADERS, ()=>buildNFRowsRaw(getExportRows('NF')), [6], [5], 'notas_fornecedor', 'Notas fiscais de fornecedor', ()=>(window.__nfRowsFull||[]).length);
+wireTableExport('NF', NF_HEADERS, ()=>buildNFRowsRaw(getExportRows('NF')), [6,7], [5], 'notas_fornecedor', 'Notas fiscais de fornecedor', ()=>(window.__nfRowsFull||[]).length);
 
 /* ================= FILTROS DE BUSCA NAS TABELAS ================= */
 function wireTableFilter(inputId, getFullRows, matchFields, renderFn, extraArg){
@@ -2053,7 +2053,7 @@ const SORT_ACCESSORS = {
     dataEntrada:{fn:r=>r.dataEntrada, numeric:false}, numeroNotaFiscal:{fn:r=>r.numeroNotaFiscal, numeric:false},
     modelo:{fn:r=>r.modelo, numeric:false}, fornecedorNome:{fn:r=>r.fornecedorNome, numeric:false},
     produto:{fn:r=>r.produtoDescricao||r.produtoCodigo, numeric:false},
-    quantidade:{fn:r=>qtyNF(r), numeric:true}, valorTotal:{fn:r=>r.valorTotal, numeric:true}
+    quantidade:{fn:r=>qtyNF(r), numeric:true}, precoUnit:{fn:r=>r.precoUnitario, numeric:true}, valorTotal:{fn:r=>r.valorTotal, numeric:true}
   }
 };
 SORT_ACCESSORS.Orc = SORT_ACCESSORS.Pedidos;
@@ -2165,7 +2165,7 @@ document.getElementById('btnExportPDFCompleto').addEventListener('click', ()=>{
   section('Pedidos de venda', DOC_HEADERS, buildDocRowsRaw(window.__pedidosRowsFull||[]), [4], []);
   section('Orçamentos', DOC_HEADERS, buildDocRowsRaw(window.__orcRowsFull||[]), [4], []);
   section('Ordens de serviço', OS_HEADERS, buildOSRowsRaw(window.__osRowsFull||[]), [4,5,6], []);
-  section('Notas fiscais de fornecedor', NF_HEADERS, buildNFRowsRaw(window.__nfRowsFull||[]), [6], [5]);
+  section('Notas fiscais de fornecedor', NF_HEADERS, buildNFRowsRaw(window.__nfRowsFull||[]), [6,7], [5]);
 
   doc.save('painel_uniplus_completo.pdf');
 });
