@@ -328,6 +328,10 @@
     text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);
     padding:8px 10px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--panel);
   }
+  thead th[data-sort]{cursor:pointer;user-select:none;white-space:nowrap;}
+  thead th[data-sort]:hover{color:var(--topbar);}
+  thead th[data-sort].sorted-asc::after{content:" \25B2";font-size:8px;position:relative;top:-1px;}
+  thead th[data-sort].sorted-desc::after{content:" \25BC";font-size:8px;position:relative;top:-1px;}
   tbody td{padding:7px 10px;border-bottom:1px solid var(--border-soft);color:var(--text);}
   tbody tr:hover{background:#f7f8fa;}
   .num{text-align:right;font-variant-numeric:tabular-nums;}
@@ -667,8 +671,8 @@
           <div class="widget-body">
             <div class="table-filter-row"><input type="text" id="filtroVendas" placeholder="Filtrar por data, DAV, cliente, vendedor ou produto..."></div>
             <div class="table-scroll">
-              <table id="tblVendas">
-                <thead><tr><th class="chk-col"><input type="checkbox" id="selAllVendas" onchange="toggleSelectAll('Vendas', this.checked)"></th><th>Data</th><th>DAV</th><th>Cliente</th><th>Vendedor</th><th>Código</th><th>Produto</th><th class="num">Qtd</th><th class="num">Preço unit.</th><th class="num">Total item</th></tr></thead>
+              <table id="tblVendas" data-tablekey="Vendas">
+                <thead><tr><th class="chk-col"><input type="checkbox" id="selAllVendas" onchange="toggleSelectAll('Vendas', this.checked)"></th><th data-sort="data">Data</th><th data-sort="dav">DAV</th><th data-sort="cliente">Cliente</th><th data-sort="vendedor">Vendedor</th><th data-sort="produto">Código</th><th data-sort="produtoNome">Produto</th><th class="num" data-sort="qtd">Qtd</th><th class="num" data-sort="precoUnit">Preço unit.</th><th class="num" data-sort="total">Total item</th></tr></thead>
                 <tbody></tbody>
               </table>
             </div>
@@ -722,8 +726,8 @@
           <div class="widget-body">
             <div class="table-filter-row"><input type="text" id="filtroFin" placeholder="Filtrar por documento, entidade, tipo ou status..."></div>
             <div class="table-scroll">
-              <table id="tblFin">
-                <thead><tr><th class="chk-col"><input type="checkbox" id="selAllFin" onchange="toggleSelectAll('Fin', this.checked)"></th><th>Documento</th><th>Entidade</th><th>Tipo</th><th>Emissão</th><th>Vencimento</th><th class="num">Valor</th><th class="num">Saldo</th><th>Status</th></tr></thead>
+              <table id="tblFin" data-tablekey="Fin">
+                <thead><tr><th class="chk-col"><input type="checkbox" id="selAllFin" onchange="toggleSelectAll('Fin', this.checked)"></th><th data-sort="documento">Documento</th><th data-sort="nomeEntidade">Entidade</th><th data-sort="tipo">Tipo</th><th data-sort="emissao">Emissão</th><th data-sort="vencimento">Vencimento</th><th class="num" data-sort="valor">Valor</th><th class="num" data-sort="saldo">Saldo</th><th data-sort="status">Status</th></tr></thead>
                 <tbody></tbody>
               </table>
             </div>
@@ -777,8 +781,8 @@
           <div class="widget-body">
             <div class="table-filter-row"><input type="text" id="filtroPedidos" placeholder="Filtrar por código, cliente, vendedor ou status..."></div>
             <div class="table-scroll">
-              <table id="tblPedidos">
-                <thead><tr><th class="chk-col"><input type="checkbox" id="selAllPedidos" onchange="toggleSelectAll('Pedidos', this.checked)"></th><th>Código</th><th>Data</th><th>Cliente</th><th>Vendedor</th><th class="num">Valor</th><th>Status</th></tr></thead>
+              <table id="tblPedidos" data-tablekey="Pedidos">
+                <thead><tr><th class="chk-col"><input type="checkbox" id="selAllPedidos" onchange="toggleSelectAll('Pedidos', this.checked)"></th><th data-sort="codigo">Código</th><th data-sort="data">Data</th><th data-sort="nomeCliente">Cliente</th><th data-sort="nomeVendedor">Vendedor</th><th class="num" data-sort="valor">Valor</th><th data-sort="status">Status</th></tr></thead>
                 <tbody></tbody>
               </table>
             </div>
@@ -832,8 +836,8 @@
           <div class="widget-body">
             <div class="table-filter-row"><input type="text" id="filtroOrc" placeholder="Filtrar por código, cliente, vendedor ou status..."></div>
             <div class="table-scroll">
-              <table id="tblOrc">
-                <thead><tr><th class="chk-col"><input type="checkbox" id="selAllOrc" onchange="toggleSelectAll('Orc', this.checked)"></th><th>Código</th><th>Data</th><th>Cliente</th><th>Vendedor</th><th class="num">Valor</th><th>Status</th></tr></thead>
+              <table id="tblOrc" data-tablekey="Orc">
+                <thead><tr><th class="chk-col"><input type="checkbox" id="selAllOrc" onchange="toggleSelectAll('Orc', this.checked)"></th><th data-sort="codigo">Código</th><th data-sort="data">Data</th><th data-sort="nomeCliente">Cliente</th><th data-sort="nomeVendedor">Vendedor</th><th class="num" data-sort="valor">Valor</th><th data-sort="status">Status</th></tr></thead>
                 <tbody></tbody>
               </table>
             </div>
@@ -887,8 +891,8 @@
           <div class="widget-body">
             <div class="table-filter-row"><input type="text" id="filtroOS" placeholder="Filtrar por código, cliente, atendente ou status..."></div>
             <div class="table-scroll">
-              <table id="tblOS">
-                <thead><tr><th class="chk-col"><input type="checkbox" id="selAllOS" onchange="toggleSelectAll('OS', this.checked)"></th><th>Código</th><th>Data</th><th>Cliente</th><th>Atendente</th><th class="num">Produtos</th><th class="num">Serviços</th><th class="num">Total</th><th>Status</th></tr></thead>
+              <table id="tblOS" data-tablekey="OS">
+                <thead><tr><th class="chk-col"><input type="checkbox" id="selAllOS" onchange="toggleSelectAll('OS', this.checked)"></th><th data-sort="codigo">Código</th><th data-sort="data">Data</th><th data-sort="nomeCliente">Cliente</th><th data-sort="nomeAtendente">Atendente</th><th class="num" data-sort="valorProdutos">Produtos</th><th class="num" data-sort="valorServicos">Serviços</th><th class="num" data-sort="valor">Total</th><th data-sort="status">Status</th></tr></thead>
                 <tbody></tbody>
               </table>
             </div>
@@ -942,8 +946,8 @@
           <div class="widget-body">
             <div class="table-filter-row"><input type="text" id="filtroNF" placeholder="Filtrar por nota, fornecedor ou produto..."></div>
             <div class="table-scroll">
-              <table id="tblNF">
-                <thead><tr><th class="chk-col"><input type="checkbox" id="selAllNF" onchange="toggleSelectAll('NF', this.checked)"></th><th>Data entrada</th><th>Nota</th><th>Modelo</th><th>Fornecedor</th><th>Produto</th><th class="num">Qtd</th><th class="num">Valor total</th></tr></thead>
+              <table id="tblNF" data-tablekey="NF">
+                <thead><tr><th class="chk-col"><input type="checkbox" id="selAllNF" onchange="toggleSelectAll('NF', this.checked)"></th><th data-sort="dataEntrada">Data entrada</th><th data-sort="numeroNotaFiscal">Nota</th><th data-sort="modelo">Modelo</th><th data-sort="fornecedorNome">Fornecedor</th><th data-sort="produto">Produto</th><th class="num" data-sort="quantidade">Qtd</th><th class="num" data-sort="valorTotal">Valor total</th></tr></thead>
                 <tbody></tbody>
               </table>
             </div>
@@ -1117,6 +1121,10 @@ function fmtCnpj(v){
   const digits = String(v).replace(/\D/g,'');
   if(digits.length !== 14) return v;
   return digits.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+}
+function qtyNF(r){
+  const v = r.quantidade ?? r.qtd ?? r.Quantidade ?? r.qtde ?? r.quantidadeItem ?? r.quantidadeEntrada;
+  return v!=null ? v : 0;
 }
 const fmtTimestamp = () => new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
 
@@ -1775,7 +1783,7 @@ function renderNFTable(rows){
     '<tr data-rowkey="NF-'+r._id+'" class="'+(tableSelection.NF.has(r._id)?'row-selected':'')+'">'+
     '<td class="chk-col"><input type="checkbox" class="rowchk-NF" data-id="'+r._id+'" '+(tableSelection.NF.has(r._id)?'checked':'')+' onchange="toggleRowSelection(\'NF\', '+r._id+', this.checked)"></td>'+
     '<td>'+fmtDate(r.dataEntrada)+'</td><td>'+esc(r.numeroNotaFiscal||'—')+'</td><td>'+esc(r.modelo||'—')+'</td><td>'+esc(r.fornecedorNome||'—')+'</td>'+
-    '<td>'+esc(r.produtoDescricao||r.produtoCodigo||'—')+'</td><td class="num">'+fmtNum(r.quantidade)+'</td><td class="num">'+fmtMoney(r.valorTotal)+'</td></tr>'
+    '<td>'+esc(r.produtoDescricao||r.produtoCodigo||'—')+'</td><td class="num">'+fmtNum(qtyNF(r))+'</td><td class="num">'+fmtMoney(r.valorTotal)+'</td></tr>'
   ).join('') || '<tr><td colspan="8" class="empty-note">Nenhuma nota de fornecedor encontrada.</td></tr>';
 }
 
@@ -1844,7 +1852,7 @@ document.getElementById('exportOS').addEventListener('click', ()=>{
 document.getElementById('exportNF').addEventListener('click', ()=>{
   const rows = getExportRows('NF');
   const csv = toCSV(rows, ['DataEntrada','NumeroNota','Modelo','Fornecedor','Produto','Quantidade','ValorTotal'],
-    r=>[fmtDate(r.dataEntrada),r.numeroNotaFiscal,r.modelo,r.fornecedorNome,r.produtoDescricao||r.produtoCodigo,r.quantidade,r.valorTotal]);
+    r=>[fmtDate(r.dataEntrada),r.numeroNotaFiscal,r.modelo,r.fornecedorNome,r.produtoDescricao||r.produtoCodigo,qtyNF(r),r.valorTotal]);
   downloadCSV(csv, 'notas_fornecedor' + exportSuffix('NF', (window.__nfRowsFull||[]).length) + '.csv');
 });
 
@@ -1871,7 +1879,7 @@ function buildOSRowsRaw(arr){
   return arr.map(o=>[o.codigo, fmtDate(o.dataOrdemServico||o.data), o.nomeCliente||'', o.nomeAtendente||'', o.valorProdutos||0, o.valorServicos||0, o.valor||0, STATUS_OS[o.status]||o.status]);
 }
 function buildNFRowsRaw(arr){
-  return arr.map(r=>[fmtDate(r.dataEntrada), r.numeroNotaFiscal||'', r.modelo||'', r.fornecedorNome||'', r.produtoDescricao||r.produtoCodigo||'', r.quantidade||0, r.valorTotal||0]);
+  return arr.map(r=>[fmtDate(r.dataEntrada), r.numeroNotaFiscal||'', r.modelo||'', r.fornecedorNome||'', r.produtoDescricao||r.produtoCodigo||'', qtyNF(r), r.valorTotal||0]);
 }
 function buildResumoRows(){
   const davs = state.davs;
@@ -2014,6 +2022,97 @@ wireTableFilter('filtroOS', ()=>window.__osRowsFull||[], [
 wireTableFilter('filtroNF', ()=>window.__nfRowsFull||[], [
   r=>r.numeroNotaFiscal, r=>r.fornecedorNome, r=>r.produtoDescricao, r=>r.produtoCodigo, r=>r.modelo
 ], renderNFTable);
+
+/* ================= ORDENAÇÃO POR COLUNA (duplo clique no cabeçalho) ================= */
+const SORT_ACCESSORS = {
+  Vendas: {
+    data:{fn:r=>r.data, numeric:false}, dav:{fn:r=>r.dav, numeric:true},
+    cliente:{fn:r=>r.cliente, numeric:false}, vendedor:{fn:r=>r.vendedor, numeric:false},
+    produto:{fn:r=>r.produto, numeric:false}, produtoNome:{fn:r=>r.produtoNome||r.produto, numeric:false},
+    qtd:{fn:r=>r.qtd, numeric:true}, precoUnit:{fn:r=>r.precoUnit, numeric:true}, total:{fn:r=>r.total, numeric:true}
+  },
+  Fin: {
+    documento:{fn:f=>f.documento||f.id, numeric:false}, nomeEntidade:{fn:f=>f.nomeEntidade, numeric:false},
+    tipo:{fn:f=>f.descricaoTipoDocumentoFinanceiro||f.tipo, numeric:false},
+    emissao:{fn:f=>f.emissao, numeric:false}, vencimento:{fn:f=>f.vencimento, numeric:false},
+    valor:{fn:f=>f.valor, numeric:true}, saldo:{fn:f=>f.saldo!=null?f.saldo:f.valor, numeric:true},
+    status:{fn:f=>STATUS_FIN[f.status]||f.status, numeric:false}
+  },
+  Pedidos: {
+    codigo:{fn:d=>d.codigo, numeric:true}, data:{fn:d=>d.data, numeric:false},
+    nomeCliente:{fn:d=>d.nomeCliente, numeric:false}, nomeVendedor:{fn:d=>d.nomeVendedor, numeric:false},
+    valor:{fn:d=>d.valor, numeric:true}, status:{fn:d=>d.status, numeric:true}
+  },
+  OS: {
+    codigo:{fn:o=>o.codigo, numeric:true}, data:{fn:o=>o.dataOrdemServico||o.data, numeric:false},
+    nomeCliente:{fn:o=>o.nomeCliente, numeric:false}, nomeAtendente:{fn:o=>o.nomeAtendente, numeric:false},
+    valorProdutos:{fn:o=>o.valorProdutos, numeric:true}, valorServicos:{fn:o=>o.valorServicos, numeric:true},
+    valor:{fn:o=>o.valor, numeric:true}, status:{fn:o=>o.status, numeric:true}
+  },
+  NF: {
+    dataEntrada:{fn:r=>r.dataEntrada, numeric:false}, numeroNotaFiscal:{fn:r=>r.numeroNotaFiscal, numeric:false},
+    modelo:{fn:r=>r.modelo, numeric:false}, fornecedorNome:{fn:r=>r.fornecedorNome, numeric:false},
+    produto:{fn:r=>r.produtoDescricao||r.produtoCodigo, numeric:false},
+    quantidade:{fn:r=>qtyNF(r), numeric:true}, valorTotal:{fn:r=>r.valorTotal, numeric:true}
+  }
+};
+SORT_ACCESSORS.Orc = SORT_ACCESSORS.Pedidos;
+
+const RENDER_TABLE_FN = {
+  Vendas: rows=>renderVendasTable(rows),
+  Fin: rows=>renderFinTable(rows),
+  Pedidos: rows=>renderDocTable(rows,4),
+  Orc: rows=>renderDocTable(rows,2),
+  OS: rows=>renderOSTable(rows),
+  NF: rows=>renderNFTable(rows)
+};
+
+const sortState = {};
+
+function applySort(key, field){
+  const accessor = (SORT_ACCESSORS[key]||{})[field];
+  const view = tableView[key];
+  if(!accessor || !view || !view.length) return;
+  const st = sortState[key];
+  const dir = (st && st.field===field) ? (st.dir==='desc' ? 'asc' : 'desc') : (accessor.numeric ? 'desc' : 'asc');
+  sortState[key] = { field, dir };
+  view.sort((a,b)=>{
+    let va = accessor.fn(a), vb = accessor.fn(b);
+    if(accessor.numeric){
+      va = Number(va)||0; vb = Number(vb)||0;
+      return dir==='asc' ? va-vb : vb-va;
+    }
+    va = (va==null?'':String(va)).toLowerCase();
+    vb = (vb==null?'':String(vb)).toLowerCase();
+    if(va<vb) return dir==='asc' ? -1 : 1;
+    if(va>vb) return dir==='asc' ? 1 : -1;
+    return 0;
+  });
+  RENDER_TABLE_FN[key](view);
+  markSortedHeader(key, field, dir);
+}
+
+function markSortedHeader(key, field, dir){
+  const table = document.querySelector('table[data-tablekey="'+key+'"]');
+  if(!table) return;
+  table.querySelectorAll('thead th[data-sort]').forEach(th=>{
+    th.classList.remove('sorted-asc','sorted-desc');
+    if(th.dataset.sort === field) th.classList.add(dir==='asc' ? 'sorted-asc' : 'sorted-desc');
+  });
+}
+
+function wireSortableHeaders(){
+  document.querySelectorAll('table[data-tablekey] thead th[data-sort]').forEach(th=>{
+    if(th.dataset.sortWired) return;
+    th.dataset.sortWired = '1';
+    th.title = 'Duplo clique para ordenar';
+    th.addEventListener('dblclick', ()=>{
+      const table = th.closest('table');
+      applySort(table.dataset.tablekey, th.dataset.sort);
+    });
+  });
+}
+wireSortableHeaders();
 
 function buildVendasRowsFullRaw(){
   return (window.__vendasRowsFull || []).map(r=>[fmtDate(r.data), r.dav, r.cliente, r.vendedor, r.produto, r.produtoNome || r.produto, r.qtd||0, r.precoUnit||0, r.total||0]);
