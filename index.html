@@ -1106,6 +1106,12 @@ const CANCEL_STATUSES = new Set([3,13]);
 const fmtMoney = v => (v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 const fmtNum = v => (v||0).toLocaleString('pt-BR');
 const todayISO = () => new Date().toISOString().slice(0,10);
+function fmtDate(iso){
+  if(!iso) return '';
+  const m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(!m) return iso;
+  return m[3] + '/' + m[2] + '/' + m[1];
+}
 const fmtTimestamp = () => new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
 
 function defaultDates(){
@@ -1359,7 +1365,7 @@ function renderOverview(){
     destroyChart('vendasDia');
     charts.vendasDia = new Chart(document.getElementById('chartVendasDia'), {
       type:'line',
-      data:{ labels:diasOrdenados, datasets:[{ label:'Valor total (R$)', data:diasOrdenados.map(d=>porDia.get(d)),
+      data:{ labels:diasOrdenados.map(fmtDate), datasets:[{ label:'Valor total (R$)', data:diasOrdenados.map(d=>porDia.get(d)),
         borderColor:'#4f94c4', backgroundColor:'rgba(126,184,222,0.18)', fill:true, tension:0.25, pointRadius:2 }] },
       options: baseChartOptions()
     });
@@ -1517,7 +1523,7 @@ function renderVendasTable(rows){
   document.querySelector('#tblVendas tbody').innerHTML = shown.map(r=>
     '<tr data-rowkey="Vendas-'+r._id+'" class="'+(tableSelection.Vendas.has(r._id)?'row-selected':'')+'">'+
     '<td class="chk-col"><input type="checkbox" class="rowchk-Vendas" data-id="'+r._id+'" '+(tableSelection.Vendas.has(r._id)?'checked':'')+' onchange="toggleRowSelection(\'Vendas\', '+r._id+', this.checked)"></td>'+
-    '<td>'+(r.data||'')+'</td><td>'+r.dav+'</td><td>'+esc(r.cliente)+'</td><td>'+esc(r.vendedor)+'</td>'+
+    '<td>'+fmtDate(r.data)+'</td><td>'+r.dav+'</td><td>'+esc(r.cliente)+'</td><td>'+esc(r.vendedor)+'</td>'+
     '<td>'+esc(r.produto)+'</td><td>'+esc(r.produtoNome || r.produto)+'</td><td class="num">'+fmtNum(r.qtd)+'</td><td class="num">'+fmtMoney(r.precoUnit)+'</td><td class="num">'+fmtMoney(r.total)+'</td></tr>'
   ).join('') || '<tr><td colspan="10" class="empty-note">Nenhum item encontrado.</td></tr>';
 }
@@ -1577,7 +1583,7 @@ function renderFinTable(fin){
     return '<tr data-rowkey="Fin-'+f._id+'" class="'+(tableSelection.Fin.has(f._id)?'row-selected':'')+'">'+
       '<td class="chk-col"><input type="checkbox" class="rowchk-Fin" data-id="'+f._id+'" '+(tableSelection.Fin.has(f._id)?'checked':'')+' onchange="toggleRowSelection(\'Fin\', '+f._id+', this.checked)"></td>'+
       '<td>'+esc(f.documento||f.id)+'</td><td>'+esc(f.nomeEntidade||'—')+'</td><td>'+esc(f.descricaoTipoDocumentoFinanceiro||f.tipo||'—')+'</td>'+
-      '<td>'+(f.emissao||'')+'</td><td>'+(f.vencimento||'')+'</td><td class="num">'+fmtMoney(f.valor)+'</td><td class="num">'+fmtMoney(f.saldo!=null?f.saldo:f.valor)+'</td>'+
+      '<td>'+fmtDate(f.emissao)+'</td><td>'+fmtDate(f.vencimento)+'</td><td class="num">'+fmtMoney(f.valor)+'</td><td class="num">'+fmtMoney(f.saldo!=null?f.saldo:f.valor)+'</td>'+
       '<td><span class="pill '+stClass+'">'+(STATUS_FIN[f.status]||f.status)+'</span></td></tr>';
   }).join('') || '<tr><td colspan="9" class="empty-note">Nenhum documento encontrado.</td></tr>';
 }
@@ -1620,7 +1626,7 @@ function renderDocList(tipoDocumento, prefix){
   destroyChart(prefix+'Dia');
   charts[prefix+'Dia'] = new Chart(document.getElementById('chart'+prefix+'Dia'), {
     type:'line',
-    data:{ labels:dias, datasets:[{ label:'Valor (R$)', data:dias.map(d=>porDia.get(d)), borderColor:'#93c9ba', backgroundColor:'rgba(147,201,186,0.2)', fill:true, tension:0.25, pointRadius:2 }] },
+    data:{ labels:dias.map(fmtDate), datasets:[{ label:'Valor (R$)', data:dias.map(d=>porDia.get(d)), borderColor:'#93c9ba', backgroundColor:'rgba(147,201,186,0.2)', fill:true, tension:0.25, pointRadius:2 }] },
     options: baseChartOptions()
   });
 
@@ -1640,7 +1646,7 @@ function renderDocTable(rows, tipoDocumento){
     const stClass = CANCEL_STATUSES.has(d.status) ? 'cancel' : ([4,7,8,17].includes(d.status) ? 'done' : 'open');
     return '<tr data-rowkey="'+key+'-'+d._id+'" class="'+(tableSelection[key].has(d._id)?'row-selected':'')+'">'+
       '<td class="chk-col"><input type="checkbox" class="rowchk-'+key+'" data-id="'+d._id+'" '+(tableSelection[key].has(d._id)?'checked':'')+' onchange="toggleRowSelection(\''+key+'\', '+d._id+', this.checked)"></td>'+
-      '<td>'+d.codigo+'</td><td>'+(d.data||'')+'</td><td>'+esc(d.nomeCliente||'—')+'</td><td>'+esc(d.nomeVendedor||'—')+'</td>'+
+      '<td>'+d.codigo+'</td><td>'+fmtDate(d.data)+'</td><td>'+esc(d.nomeCliente||'—')+'</td><td>'+esc(d.nomeVendedor||'—')+'</td>'+
       '<td class="num">'+fmtMoney(d.valor)+'</td><td><span class="pill '+stClass+'">'+(STATUS_DAV[d.status]||d.status)+'</span></td></tr>';
   }).join('') || '<tr><td colspan="7" class="empty-note">Nenhum documento encontrado.</td></tr>';
 }
@@ -1683,7 +1689,7 @@ function renderOrdemServico(){
   destroyChart('OSDia');
   charts.OSDia = new Chart(document.getElementById('chartOSDia'), {
     type:'line',
-    data:{ labels:dias, datasets:[{ label:'Valor (R$)', data:dias.map(d=>porDia.get(d)), borderColor:'#eeb15f', backgroundColor:'rgba(238,177,95,0.2)', fill:true, tension:0.25, pointRadius:2 }] },
+    data:{ labels:dias.map(fmtDate), datasets:[{ label:'Valor (R$)', data:dias.map(d=>porDia.get(d)), borderColor:'#eeb15f', backgroundColor:'rgba(238,177,95,0.2)', fill:true, tension:0.25, pointRadius:2 }] },
     options: baseChartOptions()
   });
 
@@ -1699,7 +1705,7 @@ function renderOSTable(rows){
     const stClass = OS_CANCEL_STATUSES.has(o.status) ? 'cancel' : (OS_DONE_STATUSES.has(o.status) ? 'done' : 'open');
     return '<tr data-rowkey="OS-'+o._id+'" class="'+(tableSelection.OS.has(o._id)?'row-selected':'')+'">'+
       '<td class="chk-col"><input type="checkbox" class="rowchk-OS" data-id="'+o._id+'" '+(tableSelection.OS.has(o._id)?'checked':'')+' onchange="toggleRowSelection(\'OS\', '+o._id+', this.checked)"></td>'+
-      '<td>'+o.codigo+'</td><td>'+(o.dataOrdemServico||o.data||'')+'</td><td>'+esc(o.nomeCliente||'—')+'</td><td>'+esc(o.nomeAtendente||'—')+'</td>'+
+      '<td>'+o.codigo+'</td><td>'+fmtDate(o.dataOrdemServico||o.data)+'</td><td>'+esc(o.nomeCliente||'—')+'</td><td>'+esc(o.nomeAtendente||'—')+'</td>'+
       '<td class="num">'+fmtMoney(o.valorProdutos)+'</td><td class="num">'+fmtMoney(o.valorServicos)+'</td><td class="num">'+fmtMoney(o.valor)+'</td>'+
       '<td><span class="pill '+stClass+'">'+(STATUS_OS[o.status]||o.status)+'</span></td></tr>';
   }).join('') || '<tr><td colspan="9" class="empty-note">Nenhuma ordem de serviço encontrada.</td></tr>';
@@ -1738,7 +1744,7 @@ function renderNotaFornecedor(){
   destroyChart('NFDia');
   charts.NFDia = new Chart(document.getElementById('chartNFDia'), {
     type:'line',
-    data:{ labels:dias, datasets:[{ label:'Valor (R$)', data:dias.map(d=>porDia.get(d)), borderColor:'#93c9ba', backgroundColor:'rgba(147,201,186,0.2)', fill:true, tension:0.25, pointRadius:2 }] },
+    data:{ labels:dias.map(fmtDate), datasets:[{ label:'Valor (R$)', data:dias.map(d=>porDia.get(d)), borderColor:'#93c9ba', backgroundColor:'rgba(147,201,186,0.2)', fill:true, tension:0.25, pointRadius:2 }] },
     options: baseChartOptions()
   });
 
@@ -1753,7 +1759,7 @@ function renderNFTable(rows){
   document.querySelector('#tblNF tbody').innerHTML = shown.map(r=>
     '<tr data-rowkey="NF-'+r._id+'" class="'+(tableSelection.NF.has(r._id)?'row-selected':'')+'">'+
     '<td class="chk-col"><input type="checkbox" class="rowchk-NF" data-id="'+r._id+'" '+(tableSelection.NF.has(r._id)?'checked':'')+' onchange="toggleRowSelection(\'NF\', '+r._id+', this.checked)"></td>'+
-    '<td>'+(r.dataEntrada||'')+'</td><td>'+esc(r.numeroNotaFiscal||'—')+'</td><td>'+esc(r.modelo||'—')+'</td><td>'+esc(r.fornecedorNome||'—')+'</td>'+
+    '<td>'+fmtDate(r.dataEntrada)+'</td><td>'+esc(r.numeroNotaFiscal||'—')+'</td><td>'+esc(r.modelo||'—')+'</td><td>'+esc(r.fornecedorNome||'—')+'</td>'+
     '<td>'+esc(r.produtoDescricao||r.produtoCodigo||'—')+'</td><td class="num">'+fmtNum(r.quantidade)+'</td><td class="num">'+fmtMoney(r.valorTotal)+'</td></tr>'
   ).join('') || '<tr><td colspan="8" class="empty-note">Nenhuma nota de fornecedor encontrada.</td></tr>';
 }
