@@ -1814,37 +1814,37 @@ function downloadCSV(content, filename){
 document.getElementById('exportVendas').addEventListener('click', ()=>{
   const rows = getExportRows('Vendas');
   const csv = toCSV(rows, ['Data','DAV','Cliente','Vendedor','CodigoProduto','NomeProduto','Quantidade','PrecoUnitario','Total'],
-    r=>[r.data,r.dav,r.cliente,r.vendedor,r.produto,r.produtoNome||'',r.qtd,r.precoUnit,r.total]);
+    r=>[fmtDate(r.data),r.dav,r.cliente,r.vendedor,r.produto,r.produtoNome||'',r.qtd,r.precoUnit,r.total]);
   downloadCSV(csv, 'vendas_detalhadas' + exportSuffix('Vendas', (window.__vendasRowsFull||[]).length) + '.csv');
 });
 document.getElementById('exportFin').addEventListener('click', ()=>{
   const rows = getExportRows('Fin');
   const csv = toCSV(rows, ['Documento','Entidade','Tipo','Emissao','Vencimento','Valor','Saldo','Status'],
-    f=>[f.documento||f.id,f.nomeEntidade,f.descricaoTipoDocumentoFinanceiro||f.tipo,f.emissao,f.vencimento,f.valor,f.saldo!=null?f.saldo:f.valor,STATUS_FIN[f.status]||f.status]);
+    f=>[f.documento||f.id,f.nomeEntidade,f.descricaoTipoDocumentoFinanceiro||f.tipo,fmtDate(f.emissao),fmtDate(f.vencimento),f.valor,f.saldo!=null?f.saldo:f.valor,STATUS_FIN[f.status]||f.status]);
   downloadCSV(csv, 'financeiro' + exportSuffix('Fin', state.financeiro.length) + '.csv');
 });
 document.getElementById('exportPedidos').addEventListener('click', ()=>{
   const rows = getExportRows('Pedidos');
   const csv = toCSV(rows, ['Codigo','Data','Cliente','Vendedor','Valor','Status'],
-    d=>[d.codigo,d.data,d.nomeCliente,d.nomeVendedor,d.valor,STATUS_DAV[d.status]||d.status]);
+    d=>[d.codigo,fmtDate(d.data),d.nomeCliente,d.nomeVendedor,d.valor,STATUS_DAV[d.status]||d.status]);
   downloadCSV(csv, 'pedidos_de_venda' + exportSuffix('Pedidos', (window.__pedidosRowsFull||[]).length) + '.csv');
 });
 document.getElementById('exportOrc').addEventListener('click', ()=>{
   const rows = getExportRows('Orc');
   const csv = toCSV(rows, ['Codigo','Data','Cliente','Vendedor','Valor','Status'],
-    d=>[d.codigo,d.data,d.nomeCliente,d.nomeVendedor,d.valor,STATUS_DAV[d.status]||d.status]);
+    d=>[d.codigo,fmtDate(d.data),d.nomeCliente,d.nomeVendedor,d.valor,STATUS_DAV[d.status]||d.status]);
   downloadCSV(csv, 'orcamentos' + exportSuffix('Orc', (window.__orcRowsFull||[]).length) + '.csv');
 });
 document.getElementById('exportOS').addEventListener('click', ()=>{
   const rows = getExportRows('OS');
   const csv = toCSV(rows, ['Codigo','Data','Cliente','Atendente','ValorProdutos','ValorServicos','Valor','Status'],
-    o=>[o.codigo,o.dataOrdemServico||o.data,o.nomeCliente,o.nomeAtendente,o.valorProdutos,o.valorServicos,o.valor,STATUS_OS[o.status]||o.status]);
+    o=>[o.codigo,fmtDate(o.dataOrdemServico||o.data),o.nomeCliente,o.nomeAtendente,o.valorProdutos,o.valorServicos,o.valor,STATUS_OS[o.status]||o.status]);
   downloadCSV(csv, 'ordens_de_servico' + exportSuffix('OS', (window.__osRowsFull||[]).length) + '.csv');
 });
 document.getElementById('exportNF').addEventListener('click', ()=>{
   const rows = getExportRows('NF');
   const csv = toCSV(rows, ['DataEntrada','NumeroNota','Modelo','Fornecedor','Produto','Quantidade','ValorTotal'],
-    r=>[r.dataEntrada,r.numeroNotaFiscal,r.modelo,r.fornecedorNome,r.produtoDescricao||r.produtoCodigo,r.quantidade,r.valorTotal]);
+    r=>[fmtDate(r.dataEntrada),r.numeroNotaFiscal,r.modelo,r.fornecedorNome,r.produtoDescricao||r.produtoCodigo,r.quantidade,r.valorTotal]);
   downloadCSV(csv, 'notas_fornecedor' + exportSuffix('NF', (window.__nfRowsFull||[]).length) + '.csv');
 });
 
@@ -1856,22 +1856,22 @@ const OS_HEADERS = ['Código','Data','Cliente','Atendente','Produtos','Serviços
 const NF_HEADERS = ['Data entrada','Nota','Modelo','Fornecedor','Produto','Qtd','Valor total'];
 
 function buildVendasRowsRaw(){
-  return getExportRows('Vendas').map(r=>[r.data||'', r.dav, r.cliente, r.vendedor, r.produto, r.produtoNome || r.produto, r.qtd||0, r.precoUnit||0, r.total||0]);
+  return getExportRows('Vendas').map(r=>[fmtDate(r.data), r.dav, r.cliente, r.vendedor, r.produto, r.produtoNome || r.produto, r.qtd||0, r.precoUnit||0, r.total||0]);
 }
 function buildFinRowsRaw(){
   return getExportRows('Fin').map(f=>[
     f.documento||f.id, f.nomeEntidade||'', f.descricaoTipoDocumentoFinanceiro||f.tipo||'',
-    f.emissao||'', f.vencimento||'', f.valor||0, f.saldo!=null?f.saldo:(f.valor||0), STATUS_FIN[f.status]||f.status
+    fmtDate(f.emissao), fmtDate(f.vencimento), f.valor||0, f.saldo!=null?f.saldo:(f.valor||0), STATUS_FIN[f.status]||f.status
   ]);
 }
 function buildDocRowsRaw(arr){
-  return arr.map(d=>[d.codigo, d.data||'', d.nomeCliente||'', d.nomeVendedor||'', d.valor||0, STATUS_DAV[d.status]||d.status]);
+  return arr.map(d=>[d.codigo, fmtDate(d.data), d.nomeCliente||'', d.nomeVendedor||'', d.valor||0, STATUS_DAV[d.status]||d.status]);
 }
 function buildOSRowsRaw(arr){
-  return arr.map(o=>[o.codigo, o.dataOrdemServico||o.data||'', o.nomeCliente||'', o.nomeAtendente||'', o.valorProdutos||0, o.valorServicos||0, o.valor||0, STATUS_OS[o.status]||o.status]);
+  return arr.map(o=>[o.codigo, fmtDate(o.dataOrdemServico||o.data), o.nomeCliente||'', o.nomeAtendente||'', o.valorProdutos||0, o.valorServicos||0, o.valor||0, STATUS_OS[o.status]||o.status]);
 }
 function buildNFRowsRaw(arr){
-  return arr.map(r=>[r.dataEntrada||'', r.numeroNotaFiscal||'', r.modelo||'', r.fornecedorNome||'', r.produtoDescricao||r.produtoCodigo||'', r.quantidade||0, r.valorTotal||0]);
+  return arr.map(r=>[fmtDate(r.dataEntrada), r.numeroNotaFiscal||'', r.modelo||'', r.fornecedorNome||'', r.produtoDescricao||r.produtoCodigo||'', r.quantidade||0, r.valorTotal||0]);
 }
 function buildResumoRows(){
   const davs = state.davs;
@@ -1881,7 +1881,7 @@ function buildResumoRows(){
   const finAbertos = state.financeiro.filter(f=>f.status==='A');
   const saldoAberto = finAbertos.reduce((s,f)=>s+(f.saldo!=null?f.saldo:f.valor||0),0);
   return [
-    ['Período', state.dataInicio + ' a ' + state.dataFim],
+    ['Período', fmtDate(state.dataInicio) + ' a ' + fmtDate(state.dataFim)],
     ['Total em documentos (R$)', totalValor],
     ['Quantidade de DAVs', davs.length],
     ['Orçamentos (qtd)', orc.length],
@@ -1940,12 +1940,12 @@ function pdfHeader(doc, title, subtitle){
 
 function exportTablePDF(title, headers, rows, orientation, filename){
   const doc = getJsPDF(orientation);
-  const startY = pdfHeader(doc, title, 'Período: ' + state.dataInicio + ' a ' + state.dataFim + '  ·  Gerado em ' + fmtTimestamp());
+  const startY = pdfHeader(doc, title, 'Período: ' + fmtDate(state.dataInicio) + ' a ' + fmtDate(state.dataFim) + '  ·  Gerado em ' + fmtTimestamp());
   doc.autoTable({
     startY,
     head:[headers], body: rows,
     styles:{ fontSize:8, cellPadding:4 },
-    headStyles:{ fillColor:[182,77,67], textColor:255 },
+    headStyles:{ fillColor:[50,101,118], textColor:255 },
     alternateRowStyles:{ fillColor:[247,248,250] },
     margin:{ left:40, right:40 }
   });
@@ -2016,12 +2016,12 @@ wireTableFilter('filtroNF', ()=>window.__nfRowsFull||[], [
 ], renderNFTable);
 
 function buildVendasRowsFullRaw(){
-  return (window.__vendasRowsFull || []).map(r=>[r.data||'', r.dav, r.cliente, r.vendedor, r.produto, r.produtoNome || r.produto, r.qtd||0, r.precoUnit||0, r.total||0]);
+  return (window.__vendasRowsFull || []).map(r=>[fmtDate(r.data), r.dav, r.cliente, r.vendedor, r.produto, r.produtoNome || r.produto, r.qtd||0, r.precoUnit||0, r.total||0]);
 }
 function buildFinRowsFullRaw(){
   return state.financeiro.map(f=>[
     f.documento||f.id, f.nomeEntidade||'', f.descricaoTipoDocumentoFinanceiro||f.tipo||'',
-    f.emissao||'', f.vencimento||'', f.valor||0, f.saldo!=null?f.saldo:(f.valor||0), STATUS_FIN[f.status]||f.status
+    fmtDate(f.emissao), fmtDate(f.vencimento), f.valor||0, f.saldo!=null?f.saldo:(f.valor||0), STATUS_FIN[f.status]||f.status
   ]);
 }
 
@@ -2040,13 +2040,13 @@ document.getElementById('btnExportXLSXCompleto').addEventListener('click', ()=>{
 document.getElementById('btnExportPDFCompleto').addEventListener('click', ()=>{
   const orientation = document.getElementById('pdfOrientCompleto').value;
   const doc = getJsPDF(orientation);
-  let y = pdfHeader(doc, 'Painel Uniplus — Relatório completo', 'Período: ' + state.dataInicio + ' a ' + state.dataFim + '  ·  Gerado em ' + fmtTimestamp());
+  let y = pdfHeader(doc, 'Painel Uniplus — Relatório completo', 'Período: ' + fmtDate(state.dataInicio) + ' a ' + fmtDate(state.dataFim) + '  ·  Gerado em ' + fmtTimestamp());
 
   doc.setFontSize(11); doc.setTextColor(40); doc.text('Resumo', 40, y);
   doc.autoTable({
     startY: y+8, head:[['Indicador','Valor']],
     body: buildResumoRows().map(r=>[r[0], typeof r[1]==='number' ? (r[0].indexOf('R$')>=0 ? fmtMoney(r[1]) : fmtNum(r[1])) : r[1]]),
-    styles:{ fontSize:8 }, headStyles:{ fillColor:[182,77,67], textColor:255 }, margin:{ left:40, right:40 }
+    styles:{ fontSize:8 }, headStyles:{ fillColor:[50,101,118], textColor:255 }, margin:{ left:40, right:40 }
   });
   y = doc.lastAutoTable.finalY + 26;
 
@@ -2055,7 +2055,7 @@ document.getElementById('btnExportPDFCompleto').addEventListener('click', ()=>{
     doc.setFontSize(11); doc.setTextColor(40); doc.text(title, 40, y);
     doc.autoTable({
       startY: y+8, head:[headers], body: rowsForPDF(rows, moneyCols, numCols),
-      styles:{ fontSize:7.5, cellPadding:3 }, headStyles:{ fillColor:[182,77,67], textColor:255 },
+      styles:{ fontSize:7.5, cellPadding:3 }, headStyles:{ fillColor:[50,101,118], textColor:255 },
       alternateRowStyles:{ fillColor:[247,248,250] }, margin:{ left:40, right:40 }
     });
     y = doc.lastAutoTable.finalY + 26;
