@@ -29,6 +29,11 @@ import urllib.parse
 import urllib.request
 
 HOP_BY_HOP = {'host', 'content-length', 'connection', 'transfer-encoding'}
+CORS_RESPONSE_HEADERS = {
+    'access-control-allow-origin', 'access-control-allow-headers',
+    'access-control-allow-methods', 'access-control-allow-credentials',
+    'access-control-expose-headers', 'access-control-max-age'
+}
 TARGET_HEADER = 'X-Proxy-Target'
 
 
@@ -89,7 +94,7 @@ def build_handler(default_target):
                 with urllib.request.urlopen(req, timeout=30, context=ctx) as resp:
                     self.send_response(resp.status)
                     for k, v in resp.getheaders():
-                        if k.lower() in HOP_BY_HOP:
+                        if k.lower() in HOP_BY_HOP or k.lower() in CORS_RESPONSE_HEADERS:
                             continue
                         self.send_header(k, v)
                     self._cors_headers()
