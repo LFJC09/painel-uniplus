@@ -1,0 +1,1606 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel Uniplus — Vendas &amp; Financeiro</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+  /* ===== Tema do login (utilitário / técnico, mantido separado do app) ===== */
+  :root{
+    --void:#0e1319;
+    --surface:#161e26;
+    --line:#2a3542;
+    --text:#eef1f4;
+    --muted:#8a94a3;
+    --muted-dim:#5f6b7a;
+    --gold:#c9a24b;
+    --gold-dim:#7d6631;
+    --red:#c1594f;
+    --green:#5a9b6f;
+    --radius:2px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--void);
+    color:var(--text);
+    font-family:'Inter',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  ::selection{background:var(--gold-dim);color:#fff;}
+  ::-webkit-scrollbar{width:10px;height:10px;}
+  ::-webkit-scrollbar-track{background:var(--surface);}
+  ::-webkit-scrollbar-thumb{background:var(--line);border-radius:5px;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+
+  /* ---------- Login screen ---------- */
+  #loginScreen, #masterGate{
+    min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;
+    background:
+      radial-gradient(circle at 15% 20%, rgba(201,162,75,0.07), transparent 40%),
+      radial-gradient(circle at 85% 80%, rgba(79,154,148,0.06), transparent 45%),
+      var(--void);
+  }
+  .ledger{ width:100%; max-width:460px; background:var(--surface); border:1px solid var(--line); position:relative; }
+  .ledger::before{
+    content:""; position:absolute; top:0;left:0;right:0;height:5px;
+    background:repeating-linear-gradient(90deg, var(--gold) 0 10px, transparent 10px 18px); opacity:0.55;
+  }
+  .ledger-head{ padding:28px 30px 18px; border-bottom:1px dashed var(--line); }
+  .ledger-head .eyebrow{
+    font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.14em; text-transform:uppercase;
+    color:var(--gold); margin:0 0 8px;
+  }
+  .ledger-head h1{ font-size:26px; margin:0 0 6px; font-weight:600; }
+  .ledger-head p{ color:var(--muted); font-size:13.5px; line-height:1.5; margin:0; }
+  .ledger-body{padding:24px 30px 30px;}
+  .field{margin-bottom:16px;}
+  .field label{
+    display:block; font-size:11.5px; text-transform:uppercase; letter-spacing:0.08em; color:var(--muted);
+    margin-bottom:6px; font-family:'IBM Plex Mono',monospace;
+  }
+  .field input, .field select{
+    width:100%; background:var(--void); border:1px solid var(--line); color:var(--text); padding:10px 12px;
+    font-size:14px; font-family:'IBM Plex Mono',monospace; border-radius:var(--radius);
+  }
+  .field input:focus, .field select:focus{ outline:none; border-color:var(--gold); }
+  .field .hint{font-size:11.5px;color:var(--muted-dim);margin-top:5px;line-height:1.4;}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  details.advanced{margin:4px 0 18px;border-top:1px dashed var(--line);padding-top:14px;}
+  details.advanced summary{ cursor:pointer;font-size:12.5px;color:var(--muted); font-family:'IBM Plex Mono',monospace;letter-spacing:0.04em; }
+  details.advanced .field{margin-top:14px;}
+  .btn{
+    width:100%; background:var(--gold); color:#181205; border:none; padding:13px 16px; font-size:14px;
+    font-weight:600; letter-spacing:0.02em; cursor:pointer; border-radius:var(--radius);
+    transition:filter .15s ease, transform .1s ease;
+  }
+  .btn:hover{filter:brightness(1.08);}
+  .btn:active{transform:translateY(1px);}
+  .btn:disabled{opacity:0.55;cursor:not-allowed;}
+  .btn-ghost{ background:transparent;border:1px solid var(--line);color:var(--muted); }
+  .error-box{
+    margin-top:16px;padding:11px 13px;background:rgba(193,89,79,0.1); border:1px solid rgba(193,89,79,0.4);
+    color:#e2a49d;font-size:13px;border-radius:var(--radius); display:none;
+  }
+  .load-status{ margin-top:14px;font-size:12.5px;color:var(--muted);font-family:'IBM Plex Mono',monospace; display:none; }
+
+  /* ===================================================================
+     TEMA DO PAINEL (app) — claro, no estilo do Uniplus nativo
+     Escopado em #dashboard para não conflitar com a tela de login
+     =================================================================== */
+  #dashboard{
+    --bg:#eef1f3;
+    --panel:#ffffff;
+    --border:#e3e7eb;
+    --border-soft:#edf0f3;
+    --text:#2c3646;
+    --muted:#8993a1;
+    --muted-dim:#aab2bc;
+    --topbar:#b64d43;
+    --topbar-dark:#933e36;
+    --tabstrip:#f4f5f7;
+    --red:#e2564c;
+    --red-soft:#ef8079;
+    --teal:#93c9ba;
+    --blue:#7eb8de;
+    --blue-strong:#4f94c4;
+    --orange:#eeb15f;
+    --green:#63b587;
+    display:none;
+    min-height:100vh;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',system-ui,sans-serif;
+  }
+  #dashboard h1,#dashboard h2,#dashboard h3{font-family:'Inter',system-ui,sans-serif;}
+  #dashboard .num-font{font-variant-numeric:tabular-nums;}
+
+  /* top bar */
+  .app-topbar{
+    background:var(--topbar); color:#fff; display:flex; align-items:center; justify-content:space-between;
+    padding:0 20px; height:46px; flex-wrap:wrap;
+  }
+  .app-topbar .brand{display:flex;align-items:center;gap:9px;}
+  .app-topbar .brand .sq{width:9px;height:9px;background:#fff;opacity:0.9;border-radius:1px;}
+  .app-topbar .brand b{font-size:14px;letter-spacing:0.02em;font-weight:600;}
+  .app-topbar .brand .server{font-size:11px;opacity:0.75;margin-left:4px;}
+  .app-topbar .actions{display:flex;align-items:center;gap:8px;}
+  .tbtn{
+    background:rgba(255,255,255,0.14); border:1px solid rgba(255,255,255,0.22); color:#fff;
+    font-size:12px; padding:6px 12px; border-radius:3px; cursor:pointer;
+  }
+  .tbtn:hover{background:rgba(255,255,255,0.22);}
+  select.tbtn{cursor:pointer;}
+  select.tbtn option{color:#2c3646;}
+  .app-topbar input[type=date]{
+    background:rgba(255,255,255,0.14); border:1px solid rgba(255,255,255,0.22); color:#fff;
+    font-size:12px; padding:6px 8px; border-radius:3px;
+  }
+  .app-topbar input[type=date]::-webkit-calendar-picker-indicator{filter:invert(1);}
+  .period-sep{font-size:11px;opacity:0.7;}
+
+  /* faixa de aba tipo "DASHBOARD" abaixo da topbar */
+  .tabstrip{ background:var(--tabstrip); border-bottom:1px solid var(--border); padding:0 14px; height:38px; display:flex; align-items:flex-end; }
+  .pagepill{
+    background:var(--panel); border:1px solid var(--border); border-bottom:none; border-radius:4px 4px 0 0;
+    padding:8px 14px 7px; font-size:12.5px; font-weight:600; color:var(--text); display:flex; align-items:center; gap:8px;
+    transform:translateY(1px);
+  }
+  .pagepill .ic{width:12px;height:12px;background:var(--topbar);border-radius:2px;display:inline-block;}
+  .pagepill .x{color:var(--muted-dim);font-size:12px;cursor:default;}
+
+  /* shell: sidebar + main */
+  .app-shell{display:flex;align-items:stretch;min-height:calc(100vh - 84px);}
+  .sidebar{
+    width:190px; flex:0 0 190px; background:var(--panel); border-right:1px solid var(--border);
+    padding:14px 0; display:flex; flex-direction:column; justify-content:space-between;
+  }
+  .side-nav .item{
+    display:flex; align-items:center; gap:10px; padding:10px 18px; font-size:12.5px; font-weight:600;
+    letter-spacing:0.03em; color:var(--muted); cursor:pointer; border-left:3px solid transparent;
+  }
+  .side-nav .item .ic{width:8px;height:8px;border-radius:2px;background:var(--muted-dim);}
+  .side-nav .item:hover{color:var(--text);}
+  .side-nav .item.active{ color:var(--topbar); border-left-color:var(--topbar); background:#fbf1f0; }
+  .side-nav .item.active .ic{background:var(--topbar);}
+  .side-foot{padding:10px 18px;border-top:1px solid var(--border-soft);}
+  .side-foot .item{padding:9px 0;font-size:11.5px;color:var(--muted-dim);cursor:pointer;display:flex;gap:8px;align-items:center;}
+  .side-foot .item:hover{color:var(--muted);}
+
+  main.app-main{flex:1;min-width:0;padding:20px 22px 60px;}
+  .view{display:none;}
+  .view.active{display:block;}
+
+  /* grade de widgets */
+  .wgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:16px;}
+  .wgrid.cols-2{grid-template-columns:1.3fr 1fr;}
+  @media (max-width:1100px){.wgrid,.wgrid.cols-2{grid-template-columns:1fr 1fr;}}
+  @media (max-width:720px){.wgrid,.wgrid.cols-2{grid-template-columns:1fr;}}
+
+  .widget{
+    background:var(--panel); border:1px solid var(--border); border-radius:5px;
+    display:flex; flex-direction:column; box-shadow:0 1px 2px rgba(20,30,40,0.04);
+  }
+  .widget.expanded{ grid-column:1 / -1; }
+  .widget.hidden{display:none;}
+  .widget-head{
+    display:flex; align-items:flex-start; justify-content:space-between; padding:13px 16px 10px;
+    border-bottom:1px solid var(--border-soft);
+  }
+  .widget-titles h2{font-size:13px;margin:0;font-weight:700;color:var(--text);}
+  .widget-titles .wsub{font-size:11px;color:var(--muted);display:block;margin-top:2px;}
+  .widget-actions{display:flex;gap:5px;flex:0 0 auto;}
+  .wicon{
+    width:22px;height:22px;border:none;background:transparent;color:var(--muted-dim);cursor:pointer;
+    font-size:12.5px;border-radius:3px;display:flex;align-items:center;justify-content:center;
+  }
+  .wicon:hover{background:var(--border-soft);color:var(--text);}
+  .widget-body{padding:14px 16px 6px;flex:1;}
+  .widget-foot{
+    padding:8px 16px; border-top:1px solid var(--border-soft); font-size:10.8px; color:var(--muted-dim);
+    display:flex; justify-content:space-between;
+  }
+
+  .chart-wrap{position:relative;height:210px;}
+  .chart-wrap.tall{height:270px;}
+  .widget.expanded .chart-wrap{height:380px;}
+
+  /* widgets de indicador (estilo "resumo") */
+  .stat-widget .widget-body{display:flex;flex-direction:column;justify-content:center;gap:4px;padding:16px;}
+  .stat-widget .stat-value{font-size:26px;font-weight:700;color:var(--text);}
+  .stat-widget .stat-value.red{color:var(--red);}
+  .stat-widget .stat-value.green{color:var(--green);}
+  .stat-widget .stat-value.blue{color:var(--blue-strong);}
+  .stat-widget .stat-foot{font-size:11.5px;color:var(--muted);}
+
+  .table-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;}
+  .table-toolbar .count{font-size:11px;color:var(--muted-dim);}
+  .btn-mini{
+    background:var(--panel); border:1px solid var(--border); color:var(--muted); font-size:11px;
+    padding:6px 11px; border-radius:3px; cursor:pointer;
+  }
+  .btn-mini:hover{border-color:var(--topbar);color:var(--topbar);}
+  .export-group{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+  .table-filter-row{margin-bottom:10px;}
+  .table-filter-row input{
+    width:100%; background:var(--panel); border:1px solid var(--border); color:var(--text);
+    padding:9px 12px; font-size:12.5px; border-radius:4px;
+  }
+  .table-filter-row input:focus{outline:none;border-color:var(--topbar);}
+  .table-filter-row input::placeholder{color:var(--muted-dim);}
+  select.btn-mini{
+    background:var(--panel); border:1px solid var(--border); color:var(--muted); font-size:11px;
+    padding:6px 8px; border-radius:3px; cursor:pointer;
+  }
+
+  table{width:100%;border-collapse:collapse;font-size:12.3px;}
+  thead th{
+    text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);
+    padding:8px 10px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--panel);
+  }
+  tbody td{padding:7px 10px;border-bottom:1px solid var(--border-soft);color:var(--text);}
+  tbody tr:hover{background:#f7f8fa;}
+  .num{text-align:right;font-variant-numeric:tabular-nums;}
+  .table-scroll{max-height:420px;overflow:auto;border:1px solid var(--border);border-radius:4px;}
+
+  .pill{
+    display:inline-block;padding:2px 9px;font-size:10.5px;border-radius:20px;border:1px solid var(--border);color:var(--muted);
+  }
+  .pill.open{color:var(--orange);border-color:var(--orange);background:#fdf5e9;}
+  .pill.done{color:var(--green);border-color:var(--green);background:#eef8f2;}
+  .pill.cancel{color:var(--red);border-color:var(--red);background:#fdeeed;}
+
+  .hidden-chip-bar{
+    position:fixed;right:20px;bottom:20px;background:var(--topbar);color:#fff;padding:8px 12px;border-radius:20px;
+    font-size:11.5px;box-shadow:0 4px 14px rgba(0,0,0,0.18);cursor:pointer;display:none;align-items:center;gap:8px;
+  }
+  .hidden-chip-bar.show{display:flex;}
+
+  #loadingOverlay{
+    position:fixed;inset:0;background:rgba(14,19,25,0.92); display:none;align-items:center;justify-content:center;
+    z-index:50;flex-direction:column;gap:14px;
+  }
+  .spinner{ width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--gold); border-radius:50%; animation:spin 0.8s linear infinite; }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  #loadingOverlay .msg{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--muted);}
+</style>
+</head>
+<body>
+
+<!-- ============ ACESSO TÉCNICO (gate simples, local) ============ -->
+<div id="masterGate">
+  <div class="ledger">
+    <div class="ledger-head">
+      <p class="eyebrow">Acesso restrito</p>
+      <h1>Login técnico</h1>
+      <p>Entre com seu usuário e senha do Uniplus (o mesmo login usado no portal Intelidata) para continuar.</p>
+    </div>
+    <div class="ledger-body">
+      <div class="field">
+        <label for="mgServer">Endereço do servidor</label>
+        <input id="mgServer" type="text" value="https://lfsistemas-02.webuniplus.com" placeholder="https://sua-empresa.webuniplus.com">
+        <div class="hint">O endereço real do Uniplus. O painel repassa isso ao proxy (campo abaixo) por baixo dos panos.</div>
+      </div>
+      <details class="advanced">
+        <summary>Avançado — endereço do proxy</summary>
+        <div class="field">
+          <label for="mgProxy">Endereço do proxy</label>
+          <input id="mgProxy" type="text" value="http://localhost:8787" placeholder="http://localhost:8787">
+          <div class="hint">Rodando localmente: deixe <span class="mono">http://localhost:8787</span> e mantenha o uniplus_proxy.py aberto. Hospedado (ex: Render): coloque a URL pública dele aqui, tipo <span class="mono">https://seu-proxy.onrender.com</span>.</div>
+        </div>
+      </details>
+      <div class="row2">
+        <div class="field">
+          <label for="mgTenant">Tenant</label>
+          <input id="mgTenant" type="text" placeholder="lfteste">
+        </div>
+        <div class="field">
+          <label for="mgUser">Usuário (e-mail)</label>
+          <input id="mgUser" type="text" placeholder="usuario@exemplo.com" autocomplete="username">
+        </div>
+      </div>
+      <div class="field">
+        <label for="mgPass">Senha</label>
+        <input id="mgPass" type="password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button class="btn" id="btnMasterLogin">Entrar</button>
+      <div class="load-status" id="mgLoadStatus"></div>
+      <div class="error-box" id="mgErrorBox"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ LOGIN SCREEN ============ -->
+<div id="loginScreen" style="display:none;">
+  <div class="ledger">
+    <div class="ledger-head">
+      <p class="eyebrow">Uniplus · API pública</p>
+      <h1>Painel de gestão</h1>
+      <p>Conecte-se à sua conta Uniplus para consolidar vendas, financeiro, pedidos e orçamentos em um único painel.</p>
+    </div>
+    <div class="ledger-body">
+      <div class="field">
+        <label for="fServer">Endereço do servidor</label>
+        <input id="fServer" type="text" value="https://lfsistemas-02.webuniplus.com" placeholder="https://sua-empresa.webuniplus.com">
+        <div class="hint">O endereço real do Uniplus (o painel repassa isso ao proxy local automaticamente). Ambiente Desktop/Yoda: use <span class="mono">https://localhost:8443</span> — abra essa URL direto no navegador uma vez antes, para aceitar o certificado autoassinado.</div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label for="fClientId">Conta</label>
+          <input id="fClientId" type="text" placeholder="conta">
+        </div>
+        <div class="field">
+          <label for="fClientSecret">Chave de acesso</label>
+          <input id="fClientSecret" type="password" placeholder="••••••••">
+        </div>
+      </div>
+
+      <details class="advanced">
+        <summary>Avançado — código de autorização (Basic) direto</summary>
+        <div class="field">
+          <label for="fBasic">Código de autorização (opcional)</label>
+          <input id="fBasic" type="text" placeholder="dW5pcGx1czpsNGd0cjFjazJyc3ByM25nY2wzZW50">
+          <div class="hint">Preencha aqui para pular Conta/Chave — útil no Yoda Desktop, cujo código é fixo.</div>
+        </div>
+      </details>
+
+      <div class="row2">
+        <div class="field">
+          <label for="fDataIni">Período — de</label>
+          <input id="fDataIni" type="date">
+        </div>
+        <div class="field">
+          <label for="fDataFim">Período — até</label>
+          <input id="fDataFim" type="date">
+        </div>
+      </div>
+
+      <button class="btn" id="btnConnect">Conectar e carregar painel</button>
+      <div class="load-status" id="loadStatus"></div>
+      <div class="error-box" id="errorBox"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ LOADING OVERLAY ============ -->
+<div id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="msg" id="loadingMsg">Carregando…</div>
+</div>
+
+<!-- ============ DASHBOARD ============ -->
+<div id="dashboard">
+
+  <div class="app-topbar">
+    <div class="brand">
+      <span class="sq"></span>
+      <b>PAINEL UNIPLUS</b>
+      <span class="server" id="serverLabel"></span>
+    </div>
+    <div class="actions">
+      <input type="date" id="topDataIni">
+      <span class="period-sep">até</span>
+      <input type="date" id="topDataFim">
+      <button class="tbtn" id="btnReload">Atualizar</button>
+      <select class="tbtn" id="pdfOrientCompleto" title="Orientação do PDF completo">
+        <option value="paisagem">Paisagem</option>
+        <option value="retrato">Retrato</option>
+      </select>
+      <button class="tbtn" id="btnExportPDFCompleto">PDF completo</button>
+      <button class="tbtn" id="btnExportXLSXCompleto">Excel completo</button>
+      <button class="tbtn" id="btnLogout">Trocar conta</button>
+    </div>
+  </div>
+
+  <div class="tabstrip">
+    <div class="pagepill"><span class="ic"></span>DASHBOARD<span class="x">✕</span></div>
+  </div>
+
+  <div class="app-shell">
+    <aside class="sidebar">
+      <nav class="side-nav">
+        <div class="item active" data-view="visaoGeral"><span class="ic"></span>VISÃO GERAL</div>
+        <div class="item" data-view="vendas"><span class="ic"></span>VENDAS</div>
+        <div class="item" data-view="financeiro"><span class="ic"></span>FINANCEIRO</div>
+        <div class="item" data-view="pedidos"><span class="ic"></span>PEDIDOS</div>
+        <div class="item" data-view="orcamentos"><span class="ic"></span>ORÇAMENTOS</div>
+      </nav>
+      <div class="side-foot">
+        <div class="item">⚙ CONFIGURAÇÕES</div>
+      </div>
+    </aside>
+
+    <main class="app-main">
+
+      <!-- ---- VISÃO GERAL ---- -->
+      <section class="view active" id="view-visaoGeral">
+        <div class="wgrid" id="kpiOverview"></div>
+        <div class="wgrid cols-2">
+          <div class="widget" data-widget="vendasDia">
+            <div class="widget-head">
+              <div class="widget-titles"><h2>Vendas no período</h2><span class="wsub">Soma diária do valor de todos os documentos</span></div>
+              <div class="widget-actions">
+                <button class="wicon" data-action="refresh" title="Atualizar">⟳</button>
+                <button class="wicon" data-action="expand" title="Expandir">⤢</button>
+                <button class="wicon" data-action="close" title="Remover">✕</button>
+              </div>
+            </div>
+            <div class="widget-body"><div class="chart-wrap"><canvas id="chartVendasDia"></canvas></div></div>
+            <div class="widget-foot"><span>Todos os documentos (DAVs)</span><span class="ts" data-ts>—</span></div>
+          </div>
+          <div class="widget" data-widget="tipoDoc">
+            <div class="widget-head">
+              <div class="widget-titles"><h2>Documentos por tipo</h2><span class="wsub">Pré-venda · Orçamento · Pedido · Faturamento</span></div>
+              <div class="widget-actions">
+                <button class="wicon" data-action="refresh" title="Atualizar">⟳</button>
+                <button class="wicon" data-action="expand" title="Expandir">⤢</button>
+                <button class="wicon" data-action="close" title="Remover">✕</button>
+              </div>
+            </div>
+            <div class="widget-body"><div class="chart-wrap"><canvas id="chartTipoDoc"></canvas></div></div>
+            <div class="widget-foot"><span>Período selecionado</span><span class="ts" data-ts>—</span></div>
+          </div>
+        </div>
+        <div class="wgrid cols-2">
+          <div class="widget" data-widget="vendedores">
+            <div class="widget-head">
+              <div class="widget-titles"><h2>Top 10 vendedores</h2><span class="wsub">Por valor total no período</span></div>
+              <div class="widget-actions">
+                <button class="wicon" data-action="refresh" title="Atualizar">⟳</button>
+                <button class="wicon" data-action="expand" title="Expandir">⤢</button>
+                <button class="wicon" data-action="close" title="Remover">✕</button>
+              </div>
+            </div>
+            <div class="widget-body"><div class="chart-wrap tall"><canvas id="chartVendedores"></canvas></div></div>
+            <div class="widget-foot"><span>&nbsp;</span><span class="ts" data-ts>—</span></div>
+          </div>
+          <div class="widget" data-widget="finStatusMini">
+            <div class="widget-head">
+              <div class="widget-titles"><h2>Situação financeira</h2><span class="wsub">Documentos financeiros por status</span></div>
+              <div class="widget-actions">
+                <button class="wicon" data-action="refresh" title="Atualizar">⟳</button>
+                <button class="wicon" data-action="expand" title="Expandir">⤢</button>
+                <button class="wicon" data-action="close" title="Remover">✕</button>
+              </div>
+            </div>
+            <div class="widget-body"><div class="chart-wrap tall"><canvas id="chartFinStatusMini"></canvas></div></div>
+            <div class="widget-foot"><span>&nbsp;</span><span class="ts" data-ts>—</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---- VENDAS DETALHADAS ---- -->
+      <section class="view" id="view-vendas">
+        <div class="wgrid" id="kpiVendas"></div>
+        <div class="wgrid cols-2">
+          <div class="widget" data-widget="topProdutos">
+            <div class="widget-head">
+              <div class="widget-titles"><h2>Top 10 produtos</h2><span class="wsub">Por valor total vendido no período</span></div>
+              <div class="widget-actions">
+                <button class="wicon" data-action="refresh" title="Atualizar">⟳</button>
+                <button class="wicon" data-action="expand" title="Expandir">⤢</button>
+                <button class="wicon" data-action="close" title="Remover">✕</button>
+              </div>
+            </div>
+            <div class="widget-body"><div class="chart-wrap tall"><canvas id="chartTopProdutos"></canvas></div></div>
+            <div class="widget-foot"><span>&nbsp;</span><span class="ts" data-ts>—</span></div>
+          </div>
+          <div class="widget" data-widget="topClientes">
+            <div class="widget-head">
+              <div class="widget-titles"><h2>Top 10 clientes</h2><span class="wsub">Por valor total no período</span></div>
+              <div class="widget-actions">
+                <button class="wicon" data-action="refresh" title="Atualizar">⟳</button>
+                <button class="wicon" data-action="expand" title="Expandir">⤢</button>
+                <button class="wicon" data-action="close" title="Remover">✕</button>
+              </div>
+            </div>
+            <div class="widget-body"><div class="chart-wrap tall"><canvas id="chartTopClientes"></canvas></div></div>
+            <div class="widget-foot"><span>&nbsp;</span><span class="ts" data-ts>—</span></div>
+          </div>
+        </div>
+        <div class="widget">
+          <div class="widget-head">
+            <div class="widget-titles"><h2>Itens vendidos</h2><span class="wsub" id="vendasCount"></span></div>
+            <div class="widget-actions export-group">
+              <select class="btn-mini" id="pdfOrientVendas" title="Orientação do PDF">
+                <option value="retrato">Retrato</option>
+                <option value="paisagem">Paisagem</option>
+              </select>
+              <button class="btn-mini" id="exportVendasPDF">PDF</button>
+              <button class="btn-mini" id="exportVendasXLSX">Excel</button>
+              <button class="btn-mini" id="exportVendas">CSV</button>
+            </div>
+          </div>
+          <div class="widget-body">
+            <div class="table-filter-row"><input type="text" id="filtroVendas" placeholder="Filtrar por data, DAV, cliente, vendedor ou produto..."></div>
+            <div class="table-scroll">
+              <table id="tblVendas">
+                <thead><tr><th>Data</th><th>DAV</th><th>Cliente</th><th>Vendedor</th><th>Produto</th><th class="num">Qtd</th><th class="num">Preço unit.</th><th class="num">Total item</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="widget-foot"><span>&nbsp;</span><span class="ts" data-ts>—</span></div>
+        </div>
+      </section>
+
+      <!-- ---- FINANCEIRO ---- -->
+      <section class="view" id="view-financeiro">
+        <div class="wgrid" id="kpiFinanceiro"></div>
+        <div class="wgrid cols-2">
+          <div class="widget" data-widget="aging">
+            <div class="widget-head">
+              <div class="widget-titles"><h2>Aging — contas em aberto</h2><span class="wsub">Vencidas vs. a vencer (status Aberto)</span></div>
+              <div class="widget-actions">
+                <button class="wicon" data-action="refresh" title="Atualizar">⟳</button>
+                <button class="wicon" data-action="expand" title="Expandir">⤢</button>
+                <button class="wicon" data-action="close" title="Remover">✕</button>
+              </div>
+            </div>
+            <div class="widget-body"><div class="chart-wrap"><canvas id="chartAging"></canvas></div></div>
+            <div class="widget-foot"><span>&nbsp;</span><span class="ts" data-ts>—</span></div>
+          </div>
+          <div class="widget" data-widget="finStatus">
+            <div class="widget-head">
+              <div class="widget-titles"><h2>Status dos documentos financeiros</h2><span class="wsub">Aberto · Quitado · Baixado · Cancelado</span></div>
+              <div class="widget-actions">
+                <button class="wicon" data-action="refresh" title="Atualizar">⟳</button>
+                <button class="wicon" data-action="expand" title="Expandir">⤢</button>
+                <button class="wicon" data-action="close" title="Remover">✕</button>
+              </div>
+            </div>
+            <div class="widget-body"><div class="chart-wrap"><canvas id="chartFinStatus"></canvas></div></div>
+            <div class="widget-foot"><span>&nbsp;</span><span class="ts" data-ts>—</span></div>
+          </div>
+        </div>
+        <div class="widget">
+          <div class="widget-head">
+            <div class="widget-titles"><h2>Documentos financeiros</h2><span class="wsub" id="finCount"></span></div>
+            <div class="widget-actions export-group">
+              <select class="btn-mini" id="pdfOrientFin" title="Orientação do PDF">
+                <option value="retrato">Retrato</option>
+                <option value="paisagem">Paisagem</option>
+              </select>
+              <button class="btn-mini" id="exportFinPDF">PDF</button>
+              <button class="btn-mini" id="exportFinXLSX">Excel</button>
+              <button class="btn-mini" id="exportFin">CSV</button>
+            </div>
+          </div>
+          <div class="widget-body">
+            <div class="table-filter-row"><input type="text" id="filtroFin" placeholder="Filtrar por documento, entidade, tipo ou status..."></div>
+            <div class="table-scroll">
+              <table id="tblFin">
+                <thead><tr><th>Documento</th><th>Entidade</th><th>Tipo</th><th>Emissão</th><th>Vencimento</th><th class="num">Valor</th><th class="num">Saldo</th><th>Status</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="widget-foot"><span>&nbsp;</span><span class="ts" data-ts>—</span></div>
+        </div>
+      </section>
+
+      <!-- ---- PEDIDOS DE VENDA ---- -->
+      <section class="view" id="view-pedidos">
+        <div class="wgrid" id="kpiPedidos"></div>
+        <div class="wgrid cols-2">
+          <div class="widget" data-widget="PedidosStatus">
+            <div class="widget-head">
+              <div class="widget-titles"><h2>Pedidos por status</h2></div>
+              <div class="widget-actions">
+                <button class="wicon" data-action="refresh" title="Atualizar">⟳</button>
+                <button class="wicon" data-action="expand" title="Expandir">⤢</button>
+                <button class="wicon" data-action="close" title="Remover">✕</button>
+              </div>
+            </div>
+            <div class="widget-body"><div class="chart-wrap"><canvas id="chartPedidosStatus"></canvas></div></div>
+            <div class="widget-foot"><span>&nbsp;</span><span class="ts" data-ts>—</span></div>
+          </div>
+          <div class="widget" data-widget="PedidosDia">
+            <div class="widget-head">
+              <div class="widget-titles"><h2>Pedidos por dia</h2></div>
+              <div class="widget-actions">
+                <button class="wicon" data-action="refresh" title="Atualizar">⟳</button>
+                <button class="wicon" data-action="expand" title="Expandir">⤢</button>
+                <button class="wicon" data-action="close" title="Remover">✕</button>
+              </div>
+            </div>
+            <div class="widget-body"><div class="chart-wrap"><canvas id="chartPedidosDia"></canvas></div></div>
+            <div class="widget-foot"><span>&nbsp;</span><span class="ts" data-ts>—</span></div>
+          </div>
+        </div>
+        <div class="widget">
+          <div class="widget-head">
+            <div class="widget-titles"><h2>Pedidos de venda</h2><span class="wsub" id="pedidosCount"></span></div>
+            <div class="widget-actions export-group">
+              <select class="btn-mini" id="pdfOrientPedidos" title="Orientação do PDF">
+                <option value="retrato">Retrato</option>
+                <option value="paisagem">Paisagem</option>
+              </select>
+              <button class="btn-mini" id="exportPedidosPDF">PDF</button>
+              <button class="btn-mini" id="exportPedidosXLSX">Excel</button>
+              <button class="btn-mini" id="exportPedidos">CSV</button>
+            </div>
+          </div>
+          <div class="widget-body">
+            <div class="table-filter-row"><input type="text" id="filtroPedidos" placeholder="Filtrar por código, cliente, vendedor ou status..."></div>
+            <div class="table-scroll">
+              <table id="tblPedidos">
+                <thead><tr><th>Código</th><th>Data</th><th>Cliente</th><th>Vendedor</th><th class="num">Valor</th><th>Status</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="widget-foot"><span>&nbsp;</span><span class="ts" data-ts>—</span></div>
+        </div>
+      </section>
+
+      <!-- ---- ORÇAMENTOS ---- -->
+      <section class="view" id="view-orcamentos">
+        <div class="wgrid" id="kpiOrcamentos"></div>
+        <div class="wgrid cols-2">
+          <div class="widget" data-widget="OrcamentosStatus">
+            <div class="widget-head">
+              <div class="widget-titles"><h2>Orçamentos por status</h2></div>
+              <div class="widget-actions">
+                <button class="wicon" data-action="refresh" title="Atualizar">⟳</button>
+                <button class="wicon" data-action="expand" title="Expandir">⤢</button>
+                <button class="wicon" data-action="close" title="Remover">✕</button>
+              </div>
+            </div>
+            <div class="widget-body"><div class="chart-wrap"><canvas id="chartOrcamentosStatus"></canvas></div></div>
+            <div class="widget-foot"><span>&nbsp;</span><span class="ts" data-ts>—</span></div>
+          </div>
+          <div class="widget" data-widget="OrcamentosDia">
+            <div class="widget-head">
+              <div class="widget-titles"><h2>Orçamentos por dia</h2></div>
+              <div class="widget-actions">
+                <button class="wicon" data-action="refresh" title="Atualizar">⟳</button>
+                <button class="wicon" data-action="expand" title="Expandir">⤢</button>
+                <button class="wicon" data-action="close" title="Remover">✕</button>
+              </div>
+            </div>
+            <div class="widget-body"><div class="chart-wrap"><canvas id="chartOrcamentosDia"></canvas></div></div>
+            <div class="widget-foot"><span>&nbsp;</span><span class="ts" data-ts>—</span></div>
+          </div>
+        </div>
+        <div class="widget">
+          <div class="widget-head">
+            <div class="widget-titles"><h2>Orçamentos</h2><span class="wsub" id="orcCount"></span></div>
+            <div class="widget-actions export-group">
+              <select class="btn-mini" id="pdfOrientOrc" title="Orientação do PDF">
+                <option value="retrato">Retrato</option>
+                <option value="paisagem">Paisagem</option>
+              </select>
+              <button class="btn-mini" id="exportOrcPDF">PDF</button>
+              <button class="btn-mini" id="exportOrcXLSX">Excel</button>
+              <button class="btn-mini" id="exportOrc">CSV</button>
+            </div>
+          </div>
+          <div class="widget-body">
+            <div class="table-filter-row"><input type="text" id="filtroOrc" placeholder="Filtrar por código, cliente, vendedor ou status..."></div>
+            <div class="table-scroll">
+              <table id="tblOrc">
+                <thead><tr><th>Código</th><th>Data</th><th>Cliente</th><th>Vendedor</th><th class="num">Valor</th><th>Status</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="widget-foot"><span>&nbsp;</span><span class="ts" data-ts>—</span></div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <div class="hidden-chip-bar" id="hiddenChipBar"></div>
+</div>
+
+<script>
+/* O painel sempre fala com este proxy local fixo; o servidor real digitado
+   pelo usuário é repassado a cada chamada via cabeçalho X-Proxy-Target. */
+let PROXY_BASE = 'http://localhost:8787';
+
+/* ================= ACESSO TÉCNICO (login real, via API Uniplus) ================= */
+/* Autentica de verdade contra /oauth/token com grant_type=password, usando a
+   credencial fixa do app "Uniplus Web" (client_id/secret abaixo — isso não é
+   segredo do usuário, é a mesma credencial que o próprio Uniplus Web usa no
+   navegador de qualquer pessoa). A senha digitada aqui é a senha real da
+   pessoa no Uniplus/Intelidata e nunca é salva — só o resultado (autenticado
+   ou não) fica registrado localmente. */
+const MASTER_CLIENT_ID = 'unipluswebclient';
+const MASTER_CLIENT_SECRET = 'fbac505d-6866-44b2-b976-9afed1e17f94';
+const MASTER_KEY = 'uniplusMasterGate_v1';
+const MASTER_INFO_KEY = 'uniplusMasterInfo_v1';
+
+function isMasterAuthed(){
+  try{ return localStorage.getItem(MASTER_KEY) === '1'; }catch(e){ return false; }
+}
+function setMasterAuthed(v){
+  try{ v ? localStorage.setItem(MASTER_KEY,'1') : localStorage.removeItem(MASTER_KEY); }catch(e){}
+}
+function loadMasterInfo(){
+  try{ const raw = localStorage.getItem(MASTER_INFO_KEY); return raw ? JSON.parse(raw) : null; }catch(e){ return null; }
+}
+function saveMasterInfo(info){
+  try{ localStorage.setItem(MASTER_INFO_KEY, JSON.stringify(info)); }catch(e){}
+}
+function clearMasterInfo(){
+  try{ localStorage.removeItem(MASTER_INFO_KEY); }catch(e){}
+}
+function showMasterGate(){
+  document.getElementById('masterGate').style.display = 'flex';
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'none';
+}
+function showApiLogin(){
+  document.getElementById('masterGate').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+}
+function mgError(msg){
+  const box = document.getElementById('mgErrorBox');
+  box.textContent = msg;
+  box.style.display = msg ? 'block' : 'none';
+}
+
+(function prefillMasterInfo(){
+  const info = loadMasterInfo();
+  if(info){
+    document.getElementById('mgServer').value = info.server || document.getElementById('mgServer').value;
+    document.getElementById('mgProxy').value = info.proxy || document.getElementById('mgProxy').value;
+    document.getElementById('mgTenant').value = info.tenant || '';
+    document.getElementById('mgUser').value = info.username || '';
+    PROXY_BASE = document.getElementById('mgProxy').value.trim().replace(/\/$/,'') || PROXY_BASE;
+  }
+})();
+
+document.getElementById('btnMasterLogin').addEventListener('click', async ()=>{
+  mgError('');
+  const server = document.getElementById('mgServer').value.trim().replace(/\/$/,'');
+  const proxy = document.getElementById('mgProxy').value.trim().replace(/\/$/,'');
+  const tenant = document.getElementById('mgTenant').value.trim();
+  const username = document.getElementById('mgUser').value.trim();
+  const password = document.getElementById('mgPass').value;
+
+  if(!server || !proxy || !username || !password){
+    mgError('Preencha servidor, proxy, usuário e senha.');
+    return;
+  }
+  PROXY_BASE = proxy;
+
+  const btn = document.getElementById('btnMasterLogin');
+  btn.disabled = true; btn.textContent = 'Entrando…';
+  try{
+    const basic = btoa(MASTER_CLIENT_ID + ':' + MASTER_CLIENT_SECRET);
+    const body = new URLSearchParams({ grant_type:'password', username, password, tenant, userAgent:'Chrome' }).toString();
+    const resp = await fetch(PROXY_BASE + '/oauth/token', {
+      method:'POST',
+      headers:{
+        'Authorization':'Basic ' + basic, 'Content-Type':'application/x-www-form-urlencoded',
+        'X-Proxy-Target': server
+      },
+      body
+    });
+    if(!resp.ok){
+      const t = await resp.text().catch(()=> '');
+      throw new Error('Usuário ou senha inválidos (HTTP ' + resp.status + '). ' + t);
+    }
+    const data = await resp.json();
+    if(!data.access_token) throw new Error('Resposta de login sem access_token — algo mudou no servidor.');
+
+    setMasterAuthed(true);
+    saveMasterInfo({ server, proxy, tenant, username });
+    document.getElementById('mgPass').value = '';
+    showApiLogin();
+  }catch(e){
+    mgError(e.message + ' Se persistir, confira se o proxy (uniplus_proxy.py, local ou hospedado) está no ar e apontando para o servidor certo.');
+  }finally{
+    btn.disabled = false; btn.textContent = 'Entrar';
+  }
+});
+document.getElementById('mgPass').addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter') document.getElementById('btnMasterLogin').click();
+});
+
+if(isMasterAuthed()) showApiLogin(); else showMasterGate();
+
+/* ================= ESTADO ================= */
+const state = {
+  server:'', clientId:'', clientSecret:'', basicOverride:'',
+  token:null, dataInicio:'', dataFim:'',
+  davs:[], financeiro:[], produtosMap:new Map()
+};
+const charts = {};
+
+const STATUS_DAV = {0:'Edição',1:'Não faturado',2:'PDV',3:'Cancelado',4:'Nota fiscal gerada',5:'Pré-venda gerada',
+  6:'Duplicado',7:'Parcialmente faturado',8:'Pedido gerado',9:'Pré-pedido',10:'Mesclado',11:'Transformado',
+  12:'Ordem serviço gerada',13:'Cancelado no PDV',14:'Aguardando pagamento',15:'Aguardando faturamento/cancelamento',
+  16:'Pedido enviado',17:'Pedido entregue'};
+const TIPO_DAV = {1:'Pré-venda',2:'Orçamento',4:'Pedido de venda',6:'Pedido de faturamento'};
+const STATUS_FIN = {A:'Aberto',Q:'Quitado',E:'Excluído',S:'Substituído',B:'Baixado',C:'Cancelado'};
+const CANCEL_STATUSES = new Set([3,13]);
+
+const fmtMoney = v => (v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const fmtNum = v => (v||0).toLocaleString('pt-BR');
+const todayISO = () => new Date().toISOString().slice(0,10);
+const fmtTimestamp = () => new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+
+function defaultDates(){
+  const end = new Date();
+  const start = new Date();
+  start.setDate(start.getDate()-30);
+  return { ini: start.toISOString().slice(0,10), fim: end.toISOString().slice(0,10) };
+}
+
+/* ================= AUTENTICAÇÃO / FETCH ================= */
+async function getBasicCode(){
+  if(state.basicOverride) return state.basicOverride.trim();
+  return btoa(unescape(encodeURIComponent(state.clientId + ':' + state.clientSecret)));
+}
+
+async function authenticate(){
+  const basic = await getBasicCode();
+  const resp = await fetch(PROXY_BASE + '/oauth/token', {
+    method:'POST',
+    headers:{
+      'Authorization':'Basic ' + basic, 'Content-Type':'application/x-www-form-urlencoded',
+      'X-Proxy-Target': state.server
+    },
+    body:'grant_type=client_credentials&scope=public-api'
+  });
+  if(!resp.ok){
+    const t = await resp.text().catch(()=> '');
+    throw new Error('Falha ao autenticar (HTTP ' + resp.status + '). Confira Conta/Chave de acesso. ' + t);
+  }
+  const data = await resp.json();
+  if(!data.access_token) throw new Error('Resposta de autenticação sem access_token.');
+  state.token = data.access_token;
+}
+
+async function apiGet(path, query){
+  if(!state.token) await authenticate();
+  const qs = new URLSearchParams(query || {}).toString();
+  const url = PROXY_BASE + path + (qs ? '?' + qs : '');
+  const baseHeaders = { 'Authorization':'Bearer ' + state.token, 'Content-Type':'application/json', 'X-Proxy-Target': state.server };
+  let resp = await fetch(url, { headers: baseHeaders });
+  if(resp.status === 401){
+    await authenticate();
+    resp = await fetch(url, { headers: Object.assign({}, baseHeaders, { 'Authorization':'Bearer ' + state.token }) });
+  }
+  if(!resp.ok){
+    const t = await resp.text().catch(()=> '');
+    throw new Error('Erro HTTP ' + resp.status + ' em ' + path + (t ? ' — ' + t : ''));
+  }
+  return resp.json();
+}
+
+async function fetchAllPaginated(path, baseQuery, onProgress, maxRecords){
+  maxRecords = maxRecords || 5000;
+  let offset = 0; const limit = 100; let all = [];
+  while(true){
+    const page = await apiGet(path, Object.assign({}, baseQuery, {offset, limit}));
+    if(!Array.isArray(page) || page.length === 0) break;
+    all = all.concat(page);
+    if(onProgress) onProgress(all.length);
+    if(page.length < limit) break;
+    offset += limit;
+    if(all.length >= maxRecords) break;
+  }
+  return all;
+}
+
+/* ================= CARREGAMENTO ================= */
+function setLoading(on, msg){
+  document.getElementById('loadingOverlay').style.display = on ? 'flex' : 'none';
+  if(msg) document.getElementById('loadingMsg').textContent = msg;
+}
+
+async function fetchProdutosNomes(codigos){
+  const map = new Map();
+  const list = [...codigos].filter(Boolean);
+  if(list.length === 0) return map;
+  const CONCURRENCY = 8;
+  let idx = 0, done = 0;
+  async function worker(){
+    while(idx < list.length){
+      const i = idx++;
+      const codigo = list[i];
+      try{
+        const p = await apiGet('/public-api/v1/produtos/' + encodeURIComponent(codigo));
+        if(p && p.nome) map.set(codigo, p.nome);
+      }catch(e){ /* produto sem acesso/inexistente — mantém o código como rótulo */ }
+      done++;
+      setLoading(true, 'Carregando nomes de produtos… ' + done + ' de ' + list.length);
+    }
+  }
+  await Promise.all(Array.from({length:Math.min(CONCURRENCY,list.length)}, worker));
+  return map;
+}
+
+async function loadAllData(){
+  setLoading(true, 'Autenticando…');
+  const davQuery = { 'data.ge': state.dataInicio, 'data.le': state.dataFim };
+  const finQuery = { 'vencimento.ge': state.dataInicio, 'vencimento.le': state.dataFim };
+
+  await authenticate();
+
+  setLoading(true, 'Carregando documentos de venda (DAVs)…');
+  state.davs = await fetchAllPaginated('/public-api/v1/davs', davQuery,
+    n => setLoading(true, 'Carregando DAVs… ' + n + ' registros'));
+
+  setLoading(true, 'Carregando documentos financeiros…');
+  state.financeiro = await fetchAllPaginated('/public-api/v1/documento-financeiro', finQuery,
+    n => setLoading(true, 'Carregando financeiro… ' + n + ' registros'));
+
+  const codigosUnicos = new Set();
+  state.davs.forEach(d=>(d.itens||[]).forEach(it=>{ if(it.produto) codigosUnicos.add(it.produto); }));
+  setLoading(true, 'Carregando nomes de produtos…');
+  state.produtosMap = await fetchProdutosNomes(codigosUnicos);
+
+  setLoading(false);
+}
+
+/* ================= HELPERS DE AGREGAÇÃO ================= */
+function groupSum(arr, keyFn, valFn){
+  const map = new Map();
+  arr.forEach(x=>{
+    const k = keyFn(x);
+    if(k === undefined || k === null || k === '') return;
+    map.set(k, (map.get(k)||0) + (valFn(x)||0));
+  });
+  return map;
+}
+function topN(map, n){ return [...map.entries()].sort((a,b)=>b[1]-a[1]).slice(0,n); }
+function destroyChart(id){ if(charts[id]){ charts[id].destroy(); delete charts[id]; } }
+
+function baseChartOptions(extra){
+  return Object.assign({
+    responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ labels:{ color:'#8993a1', font:{family:'Inter', size:11} } } },
+    scales:{
+      x:{ ticks:{ color:'#8993a1', font:{family:'Inter', size:10.5} }, grid:{ color:'#eef0f2' } },
+      y:{ ticks:{ color:'#8993a1', font:{family:'Inter', size:10.5} }, grid:{ color:'#eef0f2' } }
+    }
+  }, extra||{});
+}
+function donutOptions(){
+  return { responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ position:'bottom', labels:{ color:'#8993a1', font:{family:'Inter', size:10.5} } } } };
+}
+const PALETTE = ['#7eb8de','#eeb15f','#e2564c','#93c9ba','#4f94c4','#c9a24b','#63b587','#a9b2bd'];
+
+/* ================= RENDER: VISÃO GERAL ================= */
+function renderOverview(){
+  const davs = state.davs;
+  const totalValor = davs.reduce((s,d)=>s+(d.valor||0),0);
+  const orc = davs.filter(d=>d.tipoDocumento===2);
+  const ped = davs.filter(d=>d.tipoDocumento===4);
+  const cancelados = davs.filter(d=>CANCEL_STATUSES.has(d.status)).length;
+  const finAbertos = state.financeiro.filter(f=>f.status==='A');
+  const saldoAberto = finAbertos.reduce((s,f)=>s+(f.saldo!=null?f.saldo:f.valor||0),0);
+
+  document.getElementById('kpiOverview').innerHTML = [
+    statWidget('Total em documentos', fmtMoney(totalValor), davs.length + ' DAVs no período'),
+    statWidget('Orçamentos', orc.length, 'valor: ' + fmtMoney(orc.reduce((s,d)=>s+(d.valor||0),0))),
+    statWidget('Pedidos de venda', ped.length, 'valor: ' + fmtMoney(ped.reduce((s,d)=>s+(d.valor||0),0))),
+    statWidget('Saldo financeiro em aberto', fmtMoney(saldoAberto), finAbertos.length + ' documentos', 'blue'),
+    statWidget('Documentos cancelados', cancelados, ((davs.length? (cancelados/davs.length*100):0).toFixed(1)) + '% do total', cancelados>0?'red':''),
+    statWidget('Documentos financeiros', fmtNum(state.financeiro.length), 'no período selecionado')
+  ].join('');
+
+  const porDia = groupSum(davs, d=>d.data, d=>d.valor);
+  const diasOrdenados = [...porDia.keys()].sort();
+  destroyChart('vendasDia');
+  charts.vendasDia = new Chart(document.getElementById('chartVendasDia'), {
+    type:'line',
+    data:{ labels:diasOrdenados, datasets:[{ label:'Valor total (R$)', data:diasOrdenados.map(d=>porDia.get(d)),
+      borderColor:'#4f94c4', backgroundColor:'rgba(126,184,222,0.18)', fill:true, tension:0.25, pointRadius:2 }] },
+    options: baseChartOptions()
+  });
+
+  const porTipo = groupSum(davs, d=>TIPO_DAV[d.tipoDocumento]||('Outro ('+d.tipoDocumento+')'), ()=>1);
+  destroyChart('tipoDoc');
+  charts.tipoDoc = new Chart(document.getElementById('chartTipoDoc'), {
+    type:'doughnut',
+    data:{ labels:[...porTipo.keys()], datasets:[{ data:[...porTipo.values()], backgroundColor:PALETTE, borderColor:'#ffffff', borderWidth:2 }] },
+    options: donutOptions()
+  });
+
+  const porVendedor = topN(groupSum(davs, d=>d.nomeVendedor, d=>d.valor), 10);
+  destroyChart('vendedores');
+  charts.vendedores = new Chart(document.getElementById('chartVendedores'), {
+    type:'bar',
+    data:{ labels:porVendedor.map(x=>x[0]), datasets:[{ label:'Valor (R$)', data:porVendedor.map(x=>x[1]), backgroundColor:'#93c9ba' }] },
+    options: baseChartOptions({ indexAxis:'y' })
+  });
+
+  const finStatus = groupSum(state.financeiro, f=>STATUS_FIN[f.status]||f.status, ()=>1);
+  destroyChart('finStatusMini');
+  charts.finStatusMini = new Chart(document.getElementById('chartFinStatusMini'), {
+    type:'doughnut',
+    data:{ labels:[...finStatus.keys()], datasets:[{ data:[...finStatus.values()], backgroundColor:PALETTE, borderColor:'#ffffff', borderWidth:2 }] },
+    options: donutOptions()
+  });
+}
+
+function statWidget(label, value, foot, cls){
+  return '<div class="widget stat-widget">'+
+    '<div class="widget-head"><div class="widget-titles"><h2>'+label+'</h2></div>'+
+    '<div class="widget-actions"><button class="wicon" data-action="refresh" title="Atualizar">⟳</button></div></div>'+
+    '<div class="widget-body"><div class="stat-value '+(cls||'')+'">'+value+'</div>'+(foot?'<div class="stat-foot">'+foot+'</div>':'')+'</div>'+
+    '<div class="widget-foot"><span>&nbsp;</span><span class="ts">'+fmtTimestamp()+'</span></div>'+
+    '</div>';
+}
+
+/* ================= RENDER: VENDAS DETALHADAS ================= */
+function produtoNome(codigo){
+  return (state.produtosMap && state.produtosMap.get(codigo)) || null;
+}
+function produtoLabel(codigo){
+  const nome = produtoNome(codigo);
+  return nome ? (nome + ' (' + codigo + ')') : (codigo || '—');
+}
+
+function flattenItens(){
+  const rows = [];
+  state.davs.forEach(d=>{
+    (d.itens||[]).forEach(it=>{
+      rows.push({
+        data:d.data, dav:d.codigo, cliente:d.nomeCliente||d.cliente||'—', vendedor:d.nomeVendedor||d.vendedor||'—',
+        produto:it.produto, produtoNome:produtoNome(it.produto), produtoLabel:produtoLabel(it.produto),
+        qtd:it.quantidade, precoUnit:it.precoUnitario, total: it.precoTotal!=null?it.precoTotal:(it.precoUnitario*it.quantidade)
+      });
+    });
+  });
+  return rows;
+}
+
+function renderVendas(){
+  const rows = flattenItens().sort((a,b)=>(b.qtd||0)-(a.qtd||0));
+  const totalItens = rows.reduce((s,r)=>s+r.total,0);
+  const totalQtd = rows.reduce((s,r)=>s+(r.qtd||0),0);
+  const ticketMedio = state.davs.length ? (state.davs.reduce((s,d)=>s+(d.valor||0),0)/state.davs.length) : 0;
+
+  document.getElementById('kpiVendas').innerHTML = [
+    statWidget('Itens vendidos', fmtNum(rows.length), fmtNum(totalQtd) + ' unidades'),
+    statWidget('Valor total dos itens', fmtMoney(totalItens)),
+    statWidget('Ticket médio por DAV', fmtMoney(ticketMedio), state.davs.length + ' documentos')
+  ].join('');
+
+  const porProduto = topN(groupSum(rows, r=>r.produtoLabel, r=>r.total), 10);
+  destroyChart('topProdutos');
+  charts.topProdutos = new Chart(document.getElementById('chartTopProdutos'), {
+    type:'bar',
+    data:{ labels:porProduto.map(x=>x[0]), datasets:[{ label:'Valor (R$)', data:porProduto.map(x=>x[1]), backgroundColor:'#eeb15f' }] },
+    options: baseChartOptions({ indexAxis:'y' })
+  });
+
+  const porCliente = topN(groupSum(rows, r=>r.cliente, r=>r.total), 10);
+  destroyChart('topClientes');
+  charts.topClientes = new Chart(document.getElementById('chartTopClientes'), {
+    type:'bar',
+    data:{ labels:porCliente.map(x=>x[0]), datasets:[{ label:'Valor (R$)', data:porCliente.map(x=>x[1]), backgroundColor:'#63b587' }] },
+    options: baseChartOptions({ indexAxis:'y' })
+  });
+
+  window.__vendasRowsFull = rows;
+  renderVendasTable(rows);
+}
+
+function renderVendasTable(rows){
+  const shown = rows.slice(0,300);
+  document.getElementById('vendasCount').textContent = 'mostrando ' + shown.length + ' de ' + rows.length;
+  document.querySelector('#tblVendas tbody').innerHTML = shown.map(r=>
+    '<tr><td>'+(r.data||'')+'</td><td>'+r.dav+'</td><td>'+esc(r.cliente)+'</td><td>'+esc(r.vendedor)+'</td>'+
+    '<td>'+esc(r.produtoLabel)+'</td><td class="num">'+fmtNum(r.qtd)+'</td><td class="num">'+fmtMoney(r.precoUnit)+'</td><td class="num">'+fmtMoney(r.total)+'</td></tr>'
+  ).join('') || '<tr><td colspan="8" class="empty-note">Nenhum item encontrado.</td></tr>';
+}
+
+/* ================= RENDER: FINANCEIRO ================= */
+function renderFinanceiro(){
+  const fin = state.financeiro;
+  const today = todayISO();
+  const abertos = fin.filter(f=>f.status==='A');
+  const vencidos = abertos.filter(f=>f.vencimento && f.vencimento < today);
+  const aVencer = abertos.filter(f=>!(f.vencimento && f.vencimento < today));
+  const quitados = fin.filter(f=>f.status==='Q');
+
+  const saldoAberto = abertos.reduce((s,f)=>s+(f.saldo!=null?f.saldo:f.valor||0),0);
+  const saldoVencido = vencidos.reduce((s,f)=>s+(f.saldo!=null?f.saldo:f.valor||0),0);
+  const totalQuitado = quitados.reduce((s,f)=>s+(f.valor||0),0);
+
+  document.getElementById('kpiFinanceiro').innerHTML = [
+    statWidget('Documentos no período', fmtNum(fin.length)),
+    statWidget('Em aberto', fmtMoney(saldoAberto), abertos.length + ' documentos', 'blue'),
+    statWidget('Vencido', fmtMoney(saldoVencido), vencidos.length + ' documentos', vencidos.length? 'red':'' ),
+    statWidget('A vencer', fmtMoney(saldoAberto-saldoVencido), aVencer.length + ' documentos'),
+    statWidget('Quitado no período', fmtMoney(totalQuitado), quitados.length + ' documentos', 'green')
+  ].join('');
+
+  destroyChart('aging');
+  charts.aging = new Chart(document.getElementById('chartAging'), {
+    type:'bar',
+    data:{ labels:['Vencido','A vencer'], datasets:[{ label:'Saldo (R$)', data:[saldoVencido, saldoAberto-saldoVencido], backgroundColor:['#e2564c','#7eb8de'] }] },
+    options: baseChartOptions()
+  });
+
+  const porStatus = groupSum(fin, f=>STATUS_FIN[f.status]||f.status, ()=>1);
+  destroyChart('finStatus');
+  charts.finStatus = new Chart(document.getElementById('chartFinStatus'), {
+    type:'doughnut',
+    data:{ labels:[...porStatus.keys()], datasets:[{ data:[...porStatus.values()], backgroundColor:PALETTE, borderColor:'#ffffff', borderWidth:2 }] },
+    options: donutOptions()
+  });
+
+  window.__finRowsFull = fin;
+  renderFinTable(fin);
+}
+
+function renderFinTable(fin){
+  const shown = fin.slice(0,300);
+  document.getElementById('finCount').textContent = 'mostrando ' + shown.length + ' de ' + fin.length;
+  document.querySelector('#tblFin tbody').innerHTML = shown.map(f=>{
+    const stClass = f.status==='A' ? 'open' : (f.status==='Q' ? 'done' : (f.status==='C'||f.status==='E' ? 'cancel' : ''));
+    return '<tr><td>'+esc(f.documento||f.id)+'</td><td>'+esc(f.nomeEntidade||'—')+'</td><td>'+esc(f.descricaoTipoDocumentoFinanceiro||f.tipo||'—')+'</td>'+
+      '<td>'+(f.emissao||'')+'</td><td>'+(f.vencimento||'')+'</td><td class="num">'+fmtMoney(f.valor)+'</td><td class="num">'+fmtMoney(f.saldo!=null?f.saldo:f.valor)+'</td>'+
+      '<td><span class="pill '+stClass+'">'+(STATUS_FIN[f.status]||f.status)+'</span></td></tr>';
+  }).join('') || '<tr><td colspan="8" class="empty-note">Nenhum documento encontrado.</td></tr>';
+}
+
+/* ================= RENDER: PEDIDOS / ORÇAMENTOS (genérico) ================= */
+function renderDocList(tipoDocumento, prefix){
+  const rows = state.davs.filter(d=>d.tipoDocumento===tipoDocumento);
+  const totalValor = rows.reduce((s,d)=>s+(d.valor||0),0);
+  const cancelados = rows.filter(d=>CANCEL_STATUSES.has(d.status)).length;
+
+  let convertidos = 0;
+  if(tipoDocumento===2){ convertidos = rows.filter(d=>[8,4,7,11].includes(d.status)).length; }
+
+  const kpis = [
+    statWidget('Documentos no período', fmtNum(rows.length)),
+    statWidget('Valor total', fmtMoney(totalValor)),
+    statWidget('Cancelados', cancelados, rows.length? (cancelados/rows.length*100).toFixed(1)+'% do total':'', cancelados?'red':'')
+  ];
+  if(tipoDocumento===2){
+    kpis.push(statWidget('Convertidos em pedido/fatura', convertidos, rows.length? (convertidos/rows.length*100).toFixed(1)+'% de conversão':'', 'green'));
+  }
+  document.getElementById('kpi'+prefix).innerHTML = kpis.join('');
+
+  const porStatus = groupSum(rows, d=>STATUS_DAV[d.status]||d.status, ()=>1);
+  destroyChart(prefix+'Status');
+  charts[prefix+'Status'] = new Chart(document.getElementById('chart'+prefix+'Status'), {
+    type:'bar',
+    data:{ labels:[...porStatus.keys()], datasets:[{ label:'Qtd', data:[...porStatus.values()], backgroundColor:'#4f94c4' }] },
+    options: baseChartOptions({ indexAxis:'y' })
+  });
+
+  const porDia = groupSum(rows, d=>d.data, d=>d.valor);
+  const dias = [...porDia.keys()].sort();
+  destroyChart(prefix+'Dia');
+  charts[prefix+'Dia'] = new Chart(document.getElementById('chart'+prefix+'Dia'), {
+    type:'line',
+    data:{ labels:dias, datasets:[{ label:'Valor (R$)', data:dias.map(d=>porDia.get(d)), borderColor:'#93c9ba', backgroundColor:'rgba(147,201,186,0.2)', fill:true, tension:0.25, pointRadius:2 }] },
+    options: baseChartOptions()
+  });
+
+  if(tipoDocumento===4) window.__pedidosRowsFull = rows;
+  else window.__orcRowsFull = rows;
+
+  renderDocTable(rows, tipoDocumento);
+}
+
+function renderDocTable(rows, tipoDocumento){
+  const shown = rows.slice(0,300);
+  const realTblId = tipoDocumento===4 ? 'tblPedidos' : 'tblOrc';
+  const countId = tipoDocumento===4 ? 'pedidosCount' : 'orcCount';
+  document.getElementById(countId).textContent = 'mostrando ' + shown.length + ' de ' + rows.length;
+  document.querySelector('#'+realTblId+' tbody').innerHTML = shown.map(d=>{
+    const stClass = CANCEL_STATUSES.has(d.status) ? 'cancel' : ([4,7,8,17].includes(d.status) ? 'done' : 'open');
+    return '<tr><td>'+d.codigo+'</td><td>'+(d.data||'')+'</td><td>'+esc(d.nomeCliente||'—')+'</td><td>'+esc(d.nomeVendedor||'—')+'</td>'+
+      '<td class="num">'+fmtMoney(d.valor)+'</td><td><span class="pill '+stClass+'">'+(STATUS_DAV[d.status]||d.status)+'</span></td></tr>';
+  }).join('') || '<tr><td colspan="6" class="empty-note">Nenhum documento encontrado.</td></tr>';
+}
+
+function esc(s){
+  if(s===undefined||s===null) return '';
+  return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function stampAllTimestamps(){
+  const now = fmtTimestamp();
+  document.querySelectorAll('[data-ts]').forEach(el=>{ el.textContent = 'Consultado em ' + now; });
+}
+
+function renderAll(){
+  renderOverview();
+  renderVendas();
+  renderFinanceiro();
+  renderDocList(4,'Pedidos');
+  renderDocList(2,'Orcamentos');
+  stampAllTimestamps();
+}
+
+/* ================= CSV EXPORT ================= */
+function toCSV(rows, headers, mapper){
+  const lines = [headers.join(';')];
+  rows.forEach(r=>lines.push(mapper(r).map(v=>'"'+String(v===undefined||v===null?'':v).replace(/"/g,'""')+'"').join(';')));
+  return lines.join('\n');
+}
+function downloadCSV(content, filename){
+  const blob = new Blob(['\ufeff'+content], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+document.getElementById('exportVendas').addEventListener('click', ()=>{
+  const rows = window.__vendasRowsFull || [];
+  const csv = toCSV(rows, ['Data','DAV','Cliente','Vendedor','CodigoProduto','NomeProduto','Quantidade','PrecoUnitario','Total'],
+    r=>[r.data,r.dav,r.cliente,r.vendedor,r.produto,r.produtoNome||'',r.qtd,r.precoUnit,r.total]);
+  downloadCSV(csv, 'vendas_detalhadas.csv');
+});
+document.getElementById('exportFin').addEventListener('click', ()=>{
+  const csv = toCSV(state.financeiro, ['Documento','Entidade','Tipo','Emissao','Vencimento','Valor','Saldo','Status'],
+    f=>[f.documento||f.id,f.nomeEntidade,f.descricaoTipoDocumentoFinanceiro||f.tipo,f.emissao,f.vencimento,f.valor,f.saldo!=null?f.saldo:f.valor,STATUS_FIN[f.status]||f.status]);
+  downloadCSV(csv, 'financeiro.csv');
+});
+document.getElementById('exportPedidos').addEventListener('click', ()=>{
+  const rows = window.__pedidosRowsFull || [];
+  const csv = toCSV(rows, ['Codigo','Data','Cliente','Vendedor','Valor','Status'],
+    d=>[d.codigo,d.data,d.nomeCliente,d.nomeVendedor,d.valor,STATUS_DAV[d.status]||d.status]);
+  downloadCSV(csv, 'pedidos_de_venda.csv');
+});
+document.getElementById('exportOrc').addEventListener('click', ()=>{
+  const rows = window.__orcRowsFull || [];
+  const csv = toCSV(rows, ['Codigo','Data','Cliente','Vendedor','Valor','Status'],
+    d=>[d.codigo,d.data,d.nomeCliente,d.nomeVendedor,d.valor,STATUS_DAV[d.status]||d.status]);
+  downloadCSV(csv, 'orcamentos.csv');
+});
+
+/* ================= EXPORTAÇÃO PDF / EXCEL ================= */
+const VENDAS_HEADERS = ['Data','DAV','Cliente','Vendedor','Produto','Qtd','Preço unit.','Total'];
+const FIN_HEADERS = ['Documento','Entidade','Tipo','Emissão','Vencimento','Valor','Saldo','Status'];
+const DOC_HEADERS = ['Código','Data','Cliente','Vendedor','Valor','Status'];
+
+function buildVendasRowsRaw(){
+  return (window.__vendasRowsFull || []).map(r=>[r.data||'', r.dav, r.cliente, r.vendedor, r.produtoLabel, r.qtd||0, r.precoUnit||0, r.total||0]);
+}
+function buildFinRowsRaw(){
+  return state.financeiro.map(f=>[
+    f.documento||f.id, f.nomeEntidade||'', f.descricaoTipoDocumentoFinanceiro||f.tipo||'',
+    f.emissao||'', f.vencimento||'', f.valor||0, f.saldo!=null?f.saldo:(f.valor||0), STATUS_FIN[f.status]||f.status
+  ]);
+}
+function buildDocRowsRaw(arr){
+  return arr.map(d=>[d.codigo, d.data||'', d.nomeCliente||'', d.nomeVendedor||'', d.valor||0, STATUS_DAV[d.status]||d.status]);
+}
+function buildResumoRows(){
+  const davs = state.davs;
+  const totalValor = davs.reduce((s,d)=>s+(d.valor||0),0);
+  const orc = davs.filter(d=>d.tipoDocumento===2);
+  const ped = davs.filter(d=>d.tipoDocumento===4);
+  const finAbertos = state.financeiro.filter(f=>f.status==='A');
+  const saldoAberto = finAbertos.reduce((s,f)=>s+(f.saldo!=null?f.saldo:f.valor||0),0);
+  return [
+    ['Período', state.dataInicio + ' a ' + state.dataFim],
+    ['Total em documentos (R$)', totalValor],
+    ['Quantidade de DAVs', davs.length],
+    ['Orçamentos (qtd)', orc.length],
+    ['Pedidos de venda (qtd)', ped.length],
+    ['Saldo financeiro em aberto (R$)', saldoAberto],
+    ['Documentos financeiros no período (qtd)', state.financeiro.length]
+  ];
+}
+
+function rowsForPDF(rows, moneyCols, numCols){
+  moneyCols = moneyCols || []; numCols = numCols || [];
+  return rows.map(r=>r.map((v,i)=>{
+    if(moneyCols.includes(i)) return fmtMoney(v);
+    if(numCols.includes(i)) return fmtNum(v);
+    return (v===undefined||v===null) ? '' : v;
+  }));
+}
+
+function getJsPDF(orientation){
+  const { jsPDF } = window.jspdf;
+  return new jsPDF({ orientation: orientation === 'paisagem' ? 'landscape' : 'portrait', unit:'pt', format:'a4' });
+}
+
+function pdfHeader(doc, title, subtitle){
+  doc.setFontSize(15); doc.setTextColor(30,30,30);
+  doc.text(title, 40, 40);
+  doc.setFontSize(9); doc.setTextColor(130);
+  doc.text(subtitle, 40, 56);
+}
+
+function exportTablePDF(title, headers, rows, orientation, filename){
+  const doc = getJsPDF(orientation);
+  pdfHeader(doc, title, 'Período: ' + state.dataInicio + ' a ' + state.dataFim + '  ·  Gerado em ' + fmtTimestamp());
+  doc.autoTable({
+    startY: 70,
+    head:[headers], body: rows,
+    styles:{ fontSize:8, cellPadding:4 },
+    headStyles:{ fillColor:[182,77,67], textColor:255 },
+    alternateRowStyles:{ fillColor:[247,248,250] },
+    margin:{ left:40, right:40 }
+  });
+  doc.save(filename);
+}
+
+function exportTableExcel(sheetName, headers, rows, filename){
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, sheetName.slice(0,31));
+  XLSX.writeFile(wb, filename);
+}
+
+function wireTableExport(prefix, headers, buildRowsFn, moneyCols, numCols, filenameBase, titulo){
+  const pdfBtn = document.getElementById('export'+prefix+'PDF');
+  const xlsxBtn = document.getElementById('export'+prefix+'XLSX');
+  const orientSel = document.getElementById('pdfOrient'+prefix);
+  if(pdfBtn) pdfBtn.addEventListener('click', ()=>{
+    exportTablePDF(titulo, headers, rowsForPDF(buildRowsFn(), moneyCols, numCols), orientSel.value, filenameBase + '.pdf');
+  });
+  if(xlsxBtn) xlsxBtn.addEventListener('click', ()=>{
+    exportTableExcel(titulo, headers, buildRowsFn(), filenameBase + '.xlsx');
+  });
+}
+
+wireTableExport('Vendas', VENDAS_HEADERS, buildVendasRowsRaw, [6,7], [5], 'vendas_detalhadas', 'Vendas detalhadas');
+wireTableExport('Fin', FIN_HEADERS, buildFinRowsRaw, [5,6], [], 'financeiro', 'Documentos financeiros');
+wireTableExport('Pedidos', DOC_HEADERS, ()=>buildDocRowsRaw(window.__pedidosRowsFull||[]), [4], [], 'pedidos_de_venda', 'Pedidos de venda');
+wireTableExport('Orc', DOC_HEADERS, ()=>buildDocRowsRaw(window.__orcRowsFull||[]), [4], [], 'orcamentos', 'Orçamentos');
+
+/* ================= FILTROS DE BUSCA NAS TABELAS ================= */
+function wireTableFilter(inputId, getFullRows, matchFields, renderFn, extraArg){
+  const input = document.getElementById(inputId);
+  if(!input) return;
+  input.addEventListener('input', ()=>{
+    const q = input.value.toLowerCase().trim();
+    const base = getFullRows();
+    const filtered = q ? base.filter(r=>matchFields.some(get=>String(get(r)||'').toLowerCase().includes(q))) : base;
+    if(extraArg!==undefined) renderFn(filtered, extraArg); else renderFn(filtered);
+  });
+}
+
+wireTableFilter('filtroVendas', ()=>window.__vendasRowsFull||[], [
+  r=>r.data, r=>r.dav, r=>r.cliente, r=>r.vendedor, r=>r.produtoLabel
+], renderVendasTable);
+
+wireTableFilter('filtroFin', ()=>window.__finRowsFull||[], [
+  r=>r.documento, r=>r.id, r=>r.nomeEntidade, r=>r.descricaoTipoDocumentoFinanceiro||r.tipo, r=>STATUS_FIN[r.status]||r.status
+], renderFinTable);
+
+wireTableFilter('filtroPedidos', ()=>window.__pedidosRowsFull||[], [
+  r=>r.codigo, r=>r.data, r=>r.nomeCliente, r=>r.nomeVendedor, r=>STATUS_DAV[r.status]||r.status
+], renderDocTable, 4);
+
+wireTableFilter('filtroOrc', ()=>window.__orcRowsFull||[], [
+  r=>r.codigo, r=>r.data, r=>r.nomeCliente, r=>r.nomeVendedor, r=>STATUS_DAV[r.status]||r.status
+], renderDocTable, 2);
+
+document.getElementById('btnExportXLSXCompleto').addEventListener('click', ()=>{
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['Indicador','Valor'], ...buildResumoRows()]), 'Resumo');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([VENDAS_HEADERS, ...buildVendasRowsRaw()]), 'Vendas');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([FIN_HEADERS, ...buildFinRowsRaw()]), 'Financeiro');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([DOC_HEADERS, ...buildDocRowsRaw(window.__pedidosRowsFull||[])]), 'Pedidos');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([DOC_HEADERS, ...buildDocRowsRaw(window.__orcRowsFull||[])]), 'Orcamentos');
+  XLSX.writeFile(wb, 'painel_uniplus_completo.xlsx');
+});
+
+document.getElementById('btnExportPDFCompleto').addEventListener('click', ()=>{
+  const orientation = document.getElementById('pdfOrientCompleto').value;
+  const doc = getJsPDF(orientation);
+  pdfHeader(doc, 'Painel Uniplus — Relatório completo', 'Período: ' + state.dataInicio + ' a ' + state.dataFim + '  ·  Gerado em ' + fmtTimestamp());
+
+  let y = 75;
+  doc.setFontSize(11); doc.setTextColor(40); doc.text('Resumo', 40, y);
+  doc.autoTable({
+    startY: y+8, head:[['Indicador','Valor']],
+    body: buildResumoRows().map(r=>[r[0], typeof r[1]==='number' ? (r[0].indexOf('R$')>=0 ? fmtMoney(r[1]) : fmtNum(r[1])) : r[1]]),
+    styles:{ fontSize:8 }, headStyles:{ fillColor:[182,77,67], textColor:255 }, margin:{ left:40, right:40 }
+  });
+  y = doc.lastAutoTable.finalY + 26;
+
+  function section(title, headers, rows, moneyCols, numCols){
+    if(y > doc.internal.pageSize.getHeight() - 110){ doc.addPage(); y = 40; }
+    doc.setFontSize(11); doc.setTextColor(40); doc.text(title, 40, y);
+    doc.autoTable({
+      startY: y+8, head:[headers], body: rowsForPDF(rows, moneyCols, numCols),
+      styles:{ fontSize:7.5, cellPadding:3 }, headStyles:{ fillColor:[182,77,67], textColor:255 },
+      alternateRowStyles:{ fillColor:[247,248,250] }, margin:{ left:40, right:40 }
+    });
+    y = doc.lastAutoTable.finalY + 26;
+  }
+
+  section('Vendas detalhadas (itens)', VENDAS_HEADERS, buildVendasRowsRaw(), [6,7], [5]);
+  section('Financeiro', FIN_HEADERS, buildFinRowsRaw(), [5,6], []);
+  section('Pedidos de venda', DOC_HEADERS, buildDocRowsRaw(window.__pedidosRowsFull||[]), [4], []);
+  section('Orçamentos', DOC_HEADERS, buildDocRowsRaw(window.__orcRowsFull||[]), [4], []);
+
+  doc.save('painel_uniplus_completo.pdf');
+});
+
+/* ================= NAVEGAÇÃO (sidebar) ================= */
+document.querySelectorAll('.side-nav .item').forEach(item=>{
+  item.addEventListener('click', ()=>{
+    document.querySelectorAll('.side-nav .item').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    item.classList.add('active');
+    document.getElementById('view-'+item.dataset.view).classList.add('active');
+  });
+});
+
+/* ================= AÇÕES DOS WIDGETS (refresh / expandir / remover) ================= */
+function wireWidgetActions(){
+  document.querySelectorAll('.widget-actions .wicon').forEach(btn=>{
+    if(btn.dataset.wired) return;
+    btn.dataset.wired = '1';
+    btn.addEventListener('click', ()=>{
+      const widget = btn.closest('.widget');
+      const action = btn.dataset.action;
+      if(action === 'expand'){
+        widget.classList.toggle('expanded');
+        const key = widget.dataset.widget;
+        if(charts[key]) setTimeout(()=>charts[key].resize(), 60);
+      } else if(action === 'close'){
+        widget.classList.add('hidden');
+        registerHiddenWidget(widget);
+      } else if(action === 'refresh'){
+        const ts = widget.querySelector('[data-ts]');
+        if(ts) ts.textContent = 'Consultado em ' + fmtTimestamp();
+        else { const t = widget.querySelector('.ts'); if(t) t.textContent = fmtTimestamp(); }
+      }
+    });
+  });
+}
+
+const hiddenWidgets = new Set();
+function registerHiddenWidget(widget){
+  const title = widget.querySelector('.widget-titles h2');
+  const label = title ? title.textContent : 'Widget';
+  hiddenWidgets.add(widget);
+  widget.__label = label;
+  renderHiddenChipBar();
+}
+function renderHiddenChipBar(){
+  const bar = document.getElementById('hiddenChipBar');
+  if(hiddenWidgets.size === 0){ bar.classList.remove('show'); bar.innerHTML=''; return; }
+  bar.classList.add('show');
+  bar.innerHTML = (hiddenWidgets.size) + ' widget(s) ocultos — clique para restaurar';
+  bar.onclick = ()=>{
+    hiddenWidgets.forEach(w=>w.classList.remove('hidden'));
+    hiddenWidgets.clear();
+    renderHiddenChipBar();
+  };
+}
+
+/* ================= EVENTOS ================= */
+function showError(msg){
+  const box = document.getElementById('errorBox');
+  box.textContent = msg;
+  box.style.display = 'block';
+}
+function hideError(){ document.getElementById('errorBox').style.display='none'; }
+
+/* ================= CREDENCIAIS SALVAS (localStorage) ================= */
+const CREDS_KEY = 'uniplusPainelCreds_v1';
+
+function saveCreds(){
+  try{
+    localStorage.setItem(CREDS_KEY, JSON.stringify({
+      server: state.server, clientId: state.clientId, clientSecret: state.clientSecret,
+      basicOverride: state.basicOverride, dataInicio: state.dataInicio, dataFim: state.dataFim
+    }));
+  }catch(e){ /* localStorage indisponível — ignora silenciosamente */ }
+}
+function loadSavedCreds(){
+  try{
+    const raw = localStorage.getItem(CREDS_KEY);
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){ return null; }
+}
+function clearSavedCreds(){
+  try{ localStorage.removeItem(CREDS_KEY); }catch(e){}
+}
+
+const d0 = defaultDates();
+document.getElementById('fDataIni').value = d0.ini;
+document.getElementById('fDataFim').value = d0.fim;
+
+/* ================= CONEXÃO (manual ou automática) ================= */
+async function attemptConnect(isAuto){
+  hideError();
+  state.server = document.getElementById('fServer').value.trim().replace(/\/$/,'');
+  state.clientId = document.getElementById('fClientId').value.trim();
+  state.clientSecret = document.getElementById('fClientSecret').value.trim();
+  state.basicOverride = document.getElementById('fBasic').value.trim();
+  state.dataInicio = document.getElementById('fDataIni').value;
+  state.dataFim = document.getElementById('fDataFim').value;
+
+  if(!state.server){ if(!isAuto) showError('Informe o endereço do servidor.'); return false; }
+  if(!state.basicOverride && (!state.clientId || !state.clientSecret)){
+    if(!isAuto) showError('Informe Conta e Chave de acesso, ou o código de autorização avançado.');
+    return false;
+  }
+
+  const btn = document.getElementById('btnConnect');
+  if(!isAuto){ btn.disabled = true; btn.textContent = 'Conectando…'; }
+  try{
+    await loadAllData();
+    document.getElementById('serverLabel').textContent = state.server.replace(/^https?:\/\//,'');
+    document.getElementById('topDataIni').value = state.dataInicio;
+    document.getElementById('topDataFim').value = state.dataFim;
+    renderAll();
+    wireWidgetActions();
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    saveCreds();
+    return true;
+  }catch(e){
+    setLoading(false);
+    const extra = isAuto
+      ? ' (reconexão automática com as credenciais salvas falhou — confira os dados e conecte manualmente)'
+      : '. Se o erro persistir, pode ser bloqueio de CORS do servidor Uniplus para chamadas feitas via navegador — nesse caso, confirme com o suporte Uniplus se o domínio está liberado para acesso via API pública a partir do navegador.';
+    showError(e.message + extra);
+    return false;
+  }finally{
+    if(!isAuto){ btn.disabled = false; btn.textContent = 'Conectar e carregar painel'; }
+  }
+}
+
+document.getElementById('btnConnect').addEventListener('click', ()=>attemptConnect(false));
+
+document.getElementById('btnReload').addEventListener('click', async ()=>{
+  state.dataInicio = document.getElementById('topDataIni').value;
+  state.dataFim = document.getElementById('topDataFim').value;
+  try{
+    await loadAllData();
+    renderAll();
+    wireWidgetActions();
+    saveCreds();
+  }catch(e){
+    setLoading(false);
+    alert(e.message);
+  }
+});
+
+document.getElementById('btnLogout').addEventListener('click', ()=>{
+  state.token = null;
+  clearSavedCreds();
+  setMasterAuthed(false);
+  clearMasterInfo();
+  document.getElementById('fClientId').value = '';
+  document.getElementById('fClientSecret').value = '';
+  document.getElementById('fBasic').value = '';
+  document.getElementById('mgUser').value = '';
+  document.getElementById('mgPass').value = '';
+  document.getElementById('dashboard').style.display = 'none';
+  showMasterGate();
+});
+
+/* ================= RECONEXÃO AUTOMÁTICA AO ABRIR ================= */
+(function tryAutoConnect(){
+  if(!isMasterAuthed()) return;
+  const saved = loadSavedCreds();
+  if(!saved) return;
+  document.getElementById('fServer').value = saved.server || document.getElementById('fServer').value;
+  document.getElementById('fClientId').value = saved.clientId || '';
+  document.getElementById('fClientSecret').value = saved.clientSecret || '';
+  document.getElementById('fBasic').value = saved.basicOverride || '';
+  document.getElementById('fDataIni').value = saved.dataInicio || d0.ini;
+  document.getElementById('fDataFim').value = saved.dataFim || d0.fim;
+  attemptConnect(true);
+})();
+</script>
+</body>
+</html>
