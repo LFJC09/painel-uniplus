@@ -38,7 +38,13 @@ def build_handler(default_target):
     class ProxyHandler(http.server.BaseHTTPRequestHandler):
         def _cors_headers(self):
             self.send_header('Access-Control-Allow-Origin', '*')
-            self.send_header('Access-Control-Allow-Headers', '*')
+            # '*' em Allow-Headers NÃO cobre o cabeçalho Authorization (regra do
+            # próprio navegador) — por isso ecoamos de volta exatamente o que o
+            # preflight pediu em Access-Control-Request-Headers, que cobre tudo
+            # que o painel realmente usa (Authorization, Content-Type, X-Proxy-Target).
+            requested = self.headers.get('Access-Control-Request-Headers')
+            self.send_header('Access-Control-Allow-Headers',
+                              requested if requested else 'Authorization, Content-Type, X-Proxy-Target, Accept')
             self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
             self.send_header('Access-Control-Expose-Headers', '*')
             self.send_header('Access-Control-Max-Age', '86400')
