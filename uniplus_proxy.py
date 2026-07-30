@@ -20,6 +20,7 @@ servidor-a-servidor) não envia. Ele roda só na sua máquina — nada passa
 por fora além da sua própria conexão até o Uniplus.
 """
 import argparse
+import gzip
 import http.server
 import os
 import socketserver
@@ -35,6 +36,18 @@ CORS_RESPONSE_HEADERS = {
     'access-control-expose-headers', 'access-control-max-age'
 }
 TARGET_HEADER = 'X-Proxy-Target'
+
+
+def _maybe_decompress(payload, headers_obj):
+    """Se a resposta veio comprimida mesmo com Accept-Encoding: identity,
+    descomprime aqui para nunca repassar bytes ilegíveis ao navegador."""
+    encoding = (headers_obj.get('Content-Encoding') or '').lower()
+    if encoding == 'gzip':
+        try:
+            return gzip.decompress(payload)
+        except Exception:
+            return payload
+    return payload
 
 
 def build_handler(default_target):
@@ -86,22 +99,29 @@ def build_handler(default_target):
             if length:
                 body = self.rfile.read(int(length))
             headers = {k: v for k, v in self.headers.items()
-                       if k.lower() not in HOP_BY_HOP and k.lower() != TARGET_HEADER.lower()}
+                       if k.lower() not in HOP_BY_HOP
+                       and k.lower() != TARGET_HEADER.lower()
+                       and k.lower() != 'accept-encoding'}
+            # Não anunciamos suporte a gzip/deflate para o servidor real — assim ele
+            # devolve a resposta em texto puro, e não corremos o risco de repassar
+            # bytes comprimidos com um cabeçalho Content-Encoding desencontrado.
+            headers['Accept-Encoding'] = 'identity'
 
             req = urllib.request.Request(url, data=body, method=method, headers=headers)
             ctx = unverified_ctx if url.lower().startswith('https') else None
             try:
                 with urllib.request.urlopen(req, timeout=30, context=ctx) as resp:
+                    payload = _maybe_decompress(resp.read(), resp.headers)
                     self.send_response(resp.status)
                     for k, v in resp.getheaders():
-                        if k.lower() in HOP_BY_HOP or k.lower() in CORS_RESPONSE_HEADERS:
+                        if k.lower() in HOP_BY_HOP or k.lower() in CORS_RESPONSE_HEADERS or k.lower() == 'content-encoding':
                             continue
                         self.send_header(k, v)
                     self._cors_headers()
                     self.end_headers()
-                    self.wfile.write(resp.read())
+                    self.wfile.write(payload)
             except urllib.error.HTTPError as e:
-                payload = e.read()
+                payload = _maybe_decompress(e.read(), e.headers)
                 self.send_response(e.code)
                 self._cors_headers()
                 self.send_header('Content-Type', e.headers.get('Content-Type', 'application/json'))
