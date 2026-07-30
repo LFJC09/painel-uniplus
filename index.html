@@ -973,7 +973,7 @@ if(isMasterAuthed()) showApiLogin(); else showMasterGate();
 const state = {
   server:'', clientId:'', clientSecret:'', basicOverride:'',
   token:null, dataInicio:'', dataFim:'',
-  davs:[], financeiro:[], produtosMap:new Map()
+  davs:[], financeiro:[], produtosMap:new Map(), moduleErrors:{}, empresaNome:''
 };
 const charts = {};
 
@@ -1034,7 +1034,11 @@ async function apiGet(path, query){
   }
   if(!resp.ok){
     const t = await resp.text().catch(()=> '');
-    throw new Error('Erro HTTP ' + resp.status + ' em ' + path + (t ? ' — ' + t : ''));
+    const isHtml = t && t.trim().slice(0,15).toLowerCase().includes('<!doctype') || (t && t.trim().startsWith('<html'));
+    const detail = isHtml
+      ? '(o servidor devolveu a página do sistema em vez de uma resposta de API — esse endpoint provavelmente não existe/não está habilitado nesta versão do servidor)'
+      : t;
+    throw new Error('Erro HTTP ' + resp.status + ' em ' + path + (detail ? ' — ' + detail : ''));
   }
   return resp.json();
 }
@@ -1088,19 +1092,46 @@ async function loadAllData(){
   const finQuery = { 'vencimento.ge': state.dataInicio, 'vencimento.le': state.dataFim };
 
   await authenticate();
+  state.moduleErrors = {};
+
+  setLoading(true, 'Carregando dados da empresa…');
+  state.empresaNome = '';
+  try{
+    const empresas = await apiGet('/public-api/v1/commons/empresa', { offset:0, limit:5 });
+    if(Array.isArray(empresas) && empresas.length && empresas[0].razaosocial){
+      state.empresaNome = empresas[0].razaosocial;
+    }
+  }catch(e){
+    state.moduleErrors.empresa = e.message;
+  }
 
   setLoading(true, 'Carregando documentos de venda (DAVs)…');
-  state.davs = await fetchAllPaginated('/public-api/v1/davs', davQuery,
-    n => setLoading(true, 'Carregando DAVs… ' + n + ' registros'));
+  try{
+    state.davs = await fetchAllPaginated('/public-api/v1/davs', davQuery,
+      n => setLoading(true, 'Carregando DAVs… ' + n + ' registros'));
+  }catch(e){
+    state.davs = [];
+    state.moduleErrors.davs = e.message;
+  }
 
   setLoading(true, 'Carregando documentos financeiros…');
-  state.financeiro = await fetchAllPaginated('/public-api/v1/documento-financeiro', finQuery,
-    n => setLoading(true, 'Carregando financeiro… ' + n + ' registros'));
+  try{
+    state.financeiro = await fetchAllPaginated('/public-api/v1/documento-financeiro', finQuery,
+      n => setLoading(true, 'Carregando financeiro… ' + n + ' registros'));
+  }catch(e){
+    state.financeiro = [];
+    state.moduleErrors.financeiro = e.message;
+  }
 
   const codigosUnicos = new Set();
   state.davs.forEach(d=>(d.itens||[]).forEach(it=>{ if(it.produto) codigosUnicos.add(it.produto); }));
   setLoading(true, 'Carregando nomes de produtos…');
-  state.produtosMap = await fetchProdutosNomes(codigosUnicos);
+  try{
+    state.produtosMap = await fetchProdutosNomes(codigosUnicos);
+  }catch(e){
+    state.produtosMap = new Map();
+    state.moduleErrors.produtos = e.message;
+  }
 
   setLoading(false);
 }
@@ -1135,7 +1166,16 @@ function donutOptions(){
 const PALETTE = ['#7eb8de','#eeb15f','#e2564c','#93c9ba','#4f94c4','#c9a24b','#63b587','#a9b2bd'];
 
 /* ================= RENDER: VISÃO GERAL ================= */
+function moduleWarningWidget(title, msg){
+  return '<div class="widget" style="grid-column:1/-1;">'+
+    '<div class="widget-head"><div class="widget-titles"><h2>'+esc(title)+'</h2></div></div>'+
+    '<div class="widget-body"><div style="padding:8px 0;color:var(--red);font-size:12.5px;line-height:1.5;">'+esc(msg)+'</div></div>'+
+    '</div>';
+}
+
 function renderOverview(){
+  const davsOk = !state.moduleErrors.davs;
+  const finOk = !state.moduleErrors.financeiro;
   const davs = state.davs;
   const totalValor = davs.reduce((s,d)=>s+(d.valor||0),0);
   const orc = davs.filter(d=>d.tipoDocumento===2);
@@ -1145,47 +1185,59 @@ function renderOverview(){
   const saldoAberto = finAbertos.reduce((s,f)=>s+(f.saldo!=null?f.saldo:f.valor||0),0);
 
   document.getElementById('kpiOverview').innerHTML = [
-    statWidget('Total em documentos', fmtMoney(totalValor), davs.length + ' DAVs no período'),
-    statWidget('Orçamentos', orc.length, 'valor: ' + fmtMoney(orc.reduce((s,d)=>s+(d.valor||0),0))),
-    statWidget('Pedidos de venda', ped.length, 'valor: ' + fmtMoney(ped.reduce((s,d)=>s+(d.valor||0),0))),
-    statWidget('Saldo financeiro em aberto', fmtMoney(saldoAberto), finAbertos.length + ' documentos', 'blue'),
-    statWidget('Documentos cancelados', cancelados, ((davs.length? (cancelados/davs.length*100):0).toFixed(1)) + '% do total', cancelados>0?'red':''),
-    statWidget('Documentos financeiros', fmtNum(state.financeiro.length), 'no período selecionado')
+    !davsOk ? moduleWarningWidget('Vendas / DAVs indisponível', 'Não foi possível carregar documentos de venda neste servidor: ' + state.moduleErrors.davs) : [
+      statWidget('Total em documentos', fmtMoney(totalValor), davs.length + ' DAVs no período'),
+      statWidget('Orçamentos', orc.length, 'valor: ' + fmtMoney(orc.reduce((s,d)=>s+(d.valor||0),0))),
+      statWidget('Pedidos de venda', ped.length, 'valor: ' + fmtMoney(ped.reduce((s,d)=>s+(d.valor||0),0))),
+      statWidget('Documentos cancelados', cancelados, ((davs.length? (cancelados/davs.length*100):0).toFixed(1)) + '% do total', cancelados>0?'red':'')
+    ].join(''),
+    !finOk ? moduleWarningWidget('Financeiro indisponível', 'Módulo financeiro não respondeu neste servidor: ' + state.moduleErrors.financeiro) : [
+      statWidget('Saldo financeiro em aberto', fmtMoney(saldoAberto), finAbertos.length + ' documentos', 'blue'),
+      statWidget('Documentos financeiros', fmtNum(state.financeiro.length), 'no período selecionado')
+    ].join('')
   ].join('');
 
-  const porDia = groupSum(davs, d=>d.data, d=>d.valor);
-  const diasOrdenados = [...porDia.keys()].sort();
-  destroyChart('vendasDia');
-  charts.vendasDia = new Chart(document.getElementById('chartVendasDia'), {
-    type:'line',
-    data:{ labels:diasOrdenados, datasets:[{ label:'Valor total (R$)', data:diasOrdenados.map(d=>porDia.get(d)),
-      borderColor:'#4f94c4', backgroundColor:'rgba(126,184,222,0.18)', fill:true, tension:0.25, pointRadius:2 }] },
-    options: baseChartOptions()
-  });
+  if(davsOk){
+    const porDia = groupSum(davs, d=>d.data, d=>d.valor);
+    const diasOrdenados = [...porDia.keys()].sort();
+    destroyChart('vendasDia');
+    charts.vendasDia = new Chart(document.getElementById('chartVendasDia'), {
+      type:'line',
+      data:{ labels:diasOrdenados, datasets:[{ label:'Valor total (R$)', data:diasOrdenados.map(d=>porDia.get(d)),
+        borderColor:'#4f94c4', backgroundColor:'rgba(126,184,222,0.18)', fill:true, tension:0.25, pointRadius:2 }] },
+      options: baseChartOptions()
+    });
 
-  const porTipo = groupSum(davs, d=>TIPO_DAV[d.tipoDocumento]||('Outro ('+d.tipoDocumento+')'), ()=>1);
-  destroyChart('tipoDoc');
-  charts.tipoDoc = new Chart(document.getElementById('chartTipoDoc'), {
-    type:'doughnut',
-    data:{ labels:[...porTipo.keys()], datasets:[{ data:[...porTipo.values()], backgroundColor:PALETTE, borderColor:'#ffffff', borderWidth:2 }] },
-    options: donutOptions()
-  });
+    const porTipo = groupSum(davs, d=>TIPO_DAV[d.tipoDocumento]||('Outro ('+d.tipoDocumento+')'), ()=>1);
+    destroyChart('tipoDoc');
+    charts.tipoDoc = new Chart(document.getElementById('chartTipoDoc'), {
+      type:'doughnut',
+      data:{ labels:[...porTipo.keys()], datasets:[{ data:[...porTipo.values()], backgroundColor:PALETTE, borderColor:'#ffffff', borderWidth:2 }] },
+      options: donutOptions()
+    });
 
-  const porVendedor = topN(groupSum(davs, d=>d.nomeVendedor, d=>d.valor), 10);
-  destroyChart('vendedores');
-  charts.vendedores = new Chart(document.getElementById('chartVendedores'), {
-    type:'bar',
-    data:{ labels:porVendedor.map(x=>x[0]), datasets:[{ label:'Valor (R$)', data:porVendedor.map(x=>x[1]), backgroundColor:'#93c9ba' }] },
-    options: baseChartOptions({ indexAxis:'y' })
-  });
+    const porVendedor = topN(groupSum(davs, d=>d.nomeVendedor, d=>d.valor), 10);
+    destroyChart('vendedores');
+    charts.vendedores = new Chart(document.getElementById('chartVendedores'), {
+      type:'bar',
+      data:{ labels:porVendedor.map(x=>x[0]), datasets:[{ label:'Valor (R$)', data:porVendedor.map(x=>x[1]), backgroundColor:'#93c9ba' }] },
+      options: baseChartOptions({ indexAxis:'y' })
+    });
+  } else {
+    destroyChart('vendasDia'); destroyChart('tipoDoc'); destroyChart('vendedores');
+  }
 
-  const finStatus = groupSum(state.financeiro, f=>STATUS_FIN[f.status]||f.status, ()=>1);
-  destroyChart('finStatusMini');
-  charts.finStatusMini = new Chart(document.getElementById('chartFinStatusMini'), {
-    type:'doughnut',
-    data:{ labels:[...finStatus.keys()], datasets:[{ data:[...finStatus.values()], backgroundColor:PALETTE, borderColor:'#ffffff', borderWidth:2 }] },
-    options: donutOptions()
-  });
+  if(finOk){
+    const finStatus = groupSum(state.financeiro, f=>STATUS_FIN[f.status]||f.status, ()=>1);
+    destroyChart('finStatusMini');
+    charts.finStatusMini = new Chart(document.getElementById('chartFinStatusMini'), {
+      type:'doughnut',
+      data:{ labels:[...finStatus.keys()], datasets:[{ data:[...finStatus.values()], backgroundColor:PALETTE, borderColor:'#ffffff', borderWidth:2 }] },
+      options: donutOptions()
+    });
+  } else {
+    destroyChart('finStatusMini');
+  }
 }
 
 function statWidget(label, value, foot, cls){
@@ -1265,6 +1317,12 @@ function flattenItens(){
 }
 
 function renderVendas(){
+  if(state.moduleErrors.davs){
+    document.getElementById('kpiVendas').innerHTML = moduleWarningWidget('Vendas indisponível', 'Não foi possível carregar documentos de venda neste servidor: ' + state.moduleErrors.davs);
+    destroyChart('topProdutos'); destroyChart('topClientes');
+    renderVendasTable([]);
+    return;
+  }
   const rows = assignIds(flattenItens().sort((a,b)=>(b.qtd||0)-(a.qtd||0)));
   const totalItens = rows.reduce((s,r)=>s+r.total,0);
   const totalQtd = rows.reduce((s,r)=>s+(r.qtd||0),0);
@@ -1310,6 +1368,12 @@ function renderVendasTable(rows){
 
 /* ================= RENDER: FINANCEIRO ================= */
 function renderFinanceiro(){
+  if(state.moduleErrors.financeiro){
+    document.getElementById('kpiFinanceiro').innerHTML = moduleWarningWidget('Financeiro indisponível', 'Módulo financeiro não respondeu neste servidor: ' + state.moduleErrors.financeiro);
+    destroyChart('aging'); destroyChart('finStatus');
+    renderFinTable([]);
+    return;
+  }
   const fin = assignIds(state.financeiro);
   const today = todayISO();
   const abertos = fin.filter(f=>f.status==='A');
@@ -1364,6 +1428,12 @@ function renderFinTable(fin){
 
 /* ================= RENDER: PEDIDOS / ORÇAMENTOS (genérico) ================= */
 function renderDocList(tipoDocumento, prefix){
+  if(state.moduleErrors.davs){
+    document.getElementById('kpi'+prefix).innerHTML = moduleWarningWidget('Indisponível', 'Não foi possível carregar documentos de venda neste servidor: ' + state.moduleErrors.davs);
+    destroyChart(prefix+'Status'); destroyChart(prefix+'Dia');
+    renderDocTable([], tipoDocumento);
+    return;
+  }
   const rows = assignIds(state.davs.filter(d=>d.tipoDocumento===tipoDocumento));
   const totalValor = rows.reduce((s,d)=>s+(d.valor||0),0);
   const cancelados = rows.filter(d=>CANCEL_STATUSES.has(d.status)).length;
@@ -1528,18 +1598,38 @@ function getJsPDF(orientation){
   return new jsPDF({ orientation: orientation === 'paisagem' ? 'landscape' : 'portrait', unit:'pt', format:'a4' });
 }
 
+function getLogoDataUrl(){
+  const img = document.querySelector('.ug-logo-img');
+  return (img && img.src) ? img.src : null;
+}
+
 function pdfHeader(doc, title, subtitle){
+  const logo = getLogoDataUrl();
+  let xText = 40;
+  if(logo){
+    try{ doc.addImage(logo, 'PNG', 40, 16, 44, 44); xText = 96; }catch(e){ /* segue sem logo se der erro */ }
+  }
+  let y = 32;
+  if(state.empresaNome){
+    doc.setFontSize(11); doc.setTextColor(60);
+    doc.text(state.empresaNome, xText, y);
+    y += 16;
+  }
   doc.setFontSize(15); doc.setTextColor(30,30,30);
-  doc.text(title, 40, 40);
+  doc.text(title, xText, y);
+  y += 16;
   doc.setFontSize(9); doc.setTextColor(130);
-  doc.text(subtitle, 40, 56);
+  doc.text(subtitle, xText, y);
+  doc.setFontSize(8); doc.setTextColor(170);
+  doc.text('LF Sistemas', 40, 74);
+  return 90;
 }
 
 function exportTablePDF(title, headers, rows, orientation, filename){
   const doc = getJsPDF(orientation);
-  pdfHeader(doc, title, 'Período: ' + state.dataInicio + ' a ' + state.dataFim + '  ·  Gerado em ' + fmtTimestamp());
+  const startY = pdfHeader(doc, title, 'Período: ' + state.dataInicio + ' a ' + state.dataFim + '  ·  Gerado em ' + fmtTimestamp());
   doc.autoTable({
-    startY: 70,
+    startY,
     head:[headers], body: rows,
     styles:{ fontSize:8, cellPadding:4 },
     headStyles:{ fillColor:[182,77,67], textColor:255 },
@@ -1625,9 +1715,8 @@ document.getElementById('btnExportXLSXCompleto').addEventListener('click', ()=>{
 document.getElementById('btnExportPDFCompleto').addEventListener('click', ()=>{
   const orientation = document.getElementById('pdfOrientCompleto').value;
   const doc = getJsPDF(orientation);
-  pdfHeader(doc, 'Painel Uniplus — Relatório completo', 'Período: ' + state.dataInicio + ' a ' + state.dataFim + '  ·  Gerado em ' + fmtTimestamp());
+  let y = pdfHeader(doc, 'Painel Uniplus — Relatório completo', 'Período: ' + state.dataInicio + ' a ' + state.dataFim + '  ·  Gerado em ' + fmtTimestamp());
 
-  let y = 75;
   doc.setFontSize(11); doc.setTextColor(40); doc.text('Resumo', 40, y);
   doc.autoTable({
     startY: y+8, head:[['Indicador','Valor']],
