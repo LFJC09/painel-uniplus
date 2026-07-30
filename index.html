@@ -555,6 +555,8 @@
         <div class="item" data-view="financeiro"><span class="ic"></span>FINANCEIRO</div>
         <div class="item" data-view="pedidos"><span class="ic"></span>PEDIDOS</div>
         <div class="item" data-view="orcamentos"><span class="ic"></span>ORÇAMENTOS</div>
+        <div class="item" data-view="ordemServico"><span class="ic"></span>ORDENS DE SERVIÇO</div>
+        <div class="item" data-view="notaFornecedor"><span class="ic"></span>NOTAS DE FORNECEDOR</div>
       </nav>
       <div class="side-foot">
         <div class="item">⚙ CONFIGURAÇÕES</div>
@@ -840,6 +842,116 @@
         </div>
       </section>
 
+      <!-- ---- ORDENS DE SERVIÇO ---- -->
+      <section class="view" id="view-ordemServico">
+        <div class="wgrid" id="kpiOS"></div>
+        <div class="wgrid cols-2">
+          <div class="widget" data-widget="OSStatus">
+            <div class="widget-head">
+              <div class="widget-titles"><h2>Ordens de serviço por status</h2></div>
+              <div class="widget-actions">
+                <button class="wicon" data-action="refresh" title="Atualizar">⟳</button>
+                <button class="wicon" data-action="expand" title="Expandir">⤢</button>
+                <button class="wicon" data-action="close" title="Remover">✕</button>
+              </div>
+            </div>
+            <div class="widget-body"><div class="chart-wrap"><canvas id="chartOSStatus"></canvas></div></div>
+            <div class="widget-foot"><span>&nbsp;</span><span class="ts" data-ts>—</span></div>
+          </div>
+          <div class="widget" data-widget="OSDia">
+            <div class="widget-head">
+              <div class="widget-titles"><h2>Ordens de serviço por dia</h2></div>
+              <div class="widget-actions">
+                <button class="wicon" data-action="refresh" title="Atualizar">⟳</button>
+                <button class="wicon" data-action="expand" title="Expandir">⤢</button>
+                <button class="wicon" data-action="close" title="Remover">✕</button>
+              </div>
+            </div>
+            <div class="widget-body"><div class="chart-wrap"><canvas id="chartOSDia"></canvas></div></div>
+            <div class="widget-foot"><span>&nbsp;</span><span class="ts" data-ts>—</span></div>
+          </div>
+        </div>
+        <div class="widget">
+          <div class="widget-head">
+            <div class="widget-titles"><h2>Ordens de serviço</h2><span class="wsub" id="osCount"></span></div>
+            <div class="widget-actions export-group">
+              <select class="btn-mini" id="pdfOrientOS" title="Orientação do PDF">
+                <option value="retrato">Retrato</option>
+                <option value="paisagem">Paisagem</option>
+              </select>
+              <button class="btn-mini" id="exportOSPDF">PDF</button>
+              <button class="btn-mini" id="exportOSXLSX">Excel</button>
+              <button class="btn-mini" id="exportOS">CSV</button>
+            </div>
+          </div>
+          <div class="widget-body">
+            <div class="table-filter-row"><input type="text" id="filtroOS" placeholder="Filtrar por código, cliente, atendente ou status..."></div>
+            <div class="table-scroll">
+              <table id="tblOS">
+                <thead><tr><th class="chk-col"><input type="checkbox" id="selAllOS" onchange="toggleSelectAll('OS', this.checked)"></th><th>Código</th><th>Data</th><th>Cliente</th><th>Atendente</th><th class="num">Produtos</th><th class="num">Serviços</th><th class="num">Total</th><th>Status</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="widget-foot"><span>&nbsp;</span><span class="ts" data-ts>—</span></div>
+        </div>
+      </section>
+
+      <!-- ---- NOTAS FISCAIS DE FORNECEDOR (ENTRADA) ---- -->
+      <section class="view" id="view-notaFornecedor">
+        <div class="wgrid" id="kpiNF"></div>
+        <div class="wgrid cols-2">
+          <div class="widget" data-widget="NFFornecedores">
+            <div class="widget-head">
+              <div class="widget-titles"><h2>Top 10 fornecedores</h2><span class="wsub">Por valor total no período</span></div>
+              <div class="widget-actions">
+                <button class="wicon" data-action="refresh" title="Atualizar">⟳</button>
+                <button class="wicon" data-action="expand" title="Expandir">⤢</button>
+                <button class="wicon" data-action="close" title="Remover">✕</button>
+              </div>
+            </div>
+            <div class="widget-body"><div class="chart-wrap tall"><canvas id="chartNFFornecedores"></canvas></div></div>
+            <div class="widget-foot"><span>&nbsp;</span><span class="ts" data-ts>—</span></div>
+          </div>
+          <div class="widget" data-widget="NFDia">
+            <div class="widget-head">
+              <div class="widget-titles"><h2>Entradas por dia</h2></div>
+              <div class="widget-actions">
+                <button class="wicon" data-action="refresh" title="Atualizar">⟳</button>
+                <button class="wicon" data-action="expand" title="Expandir">⤢</button>
+                <button class="wicon" data-action="close" title="Remover">✕</button>
+              </div>
+            </div>
+            <div class="widget-body"><div class="chart-wrap tall"><canvas id="chartNFDia"></canvas></div></div>
+            <div class="widget-foot"><span>&nbsp;</span><span class="ts" data-ts>—</span></div>
+          </div>
+        </div>
+        <div class="widget">
+          <div class="widget-head">
+            <div class="widget-titles"><h2>Itens de notas fiscais de fornecedor</h2><span class="wsub" id="nfCount"></span></div>
+            <div class="widget-actions export-group">
+              <select class="btn-mini" id="pdfOrientNF" title="Orientação do PDF">
+                <option value="retrato">Retrato</option>
+                <option value="paisagem">Paisagem</option>
+              </select>
+              <button class="btn-mini" id="exportNFPDF">PDF</button>
+              <button class="btn-mini" id="exportNFXLSX">Excel</button>
+              <button class="btn-mini" id="exportNF">CSV</button>
+            </div>
+          </div>
+          <div class="widget-body">
+            <div class="table-filter-row"><input type="text" id="filtroNF" placeholder="Filtrar por nota, fornecedor ou produto..."></div>
+            <div class="table-scroll">
+              <table id="tblNF">
+                <thead><tr><th class="chk-col"><input type="checkbox" id="selAllNF" onchange="toggleSelectAll('NF', this.checked)"></th><th>Data entrada</th><th>Nota</th><th>Modelo</th><th>Fornecedor</th><th>Produto</th><th class="num">Qtd</th><th class="num">Valor total</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="widget-foot"><span>&nbsp;</span><span class="ts" data-ts>—</span></div>
+        </div>
+      </section>
+
     </main>
   </div>
 
@@ -973,7 +1085,8 @@ if(isMasterAuthed()) showApiLogin(); else showMasterGate();
 const state = {
   server:'', clientId:'', clientSecret:'', basicOverride:'',
   token:null, dataInicio:'', dataFim:'',
-  davs:[], financeiro:[], produtosMap:new Map(), moduleErrors:{}, empresaNome:''
+  davs:[], financeiro:[], produtosMap:new Map(), moduleErrors:{}, empresaNome:'',
+  ordemServico:[], notaFornecedor:[]
 };
 const charts = {};
 
@@ -983,6 +1096,11 @@ const STATUS_DAV = {0:'Edição',1:'Não faturado',2:'PDV',3:'Cancelado',4:'Nota
   16:'Pedido enviado',17:'Pedido entregue'};
 const TIPO_DAV = {1:'Pré-venda',2:'Orçamento',4:'Pedido de venda',6:'Pedido de faturamento'};
 const STATUS_FIN = {A:'Aberto',Q:'Quitado',E:'Excluído',S:'Substituído',B:'Baixado',C:'Cancelado'};
+const STATUS_OS = {1:'Aberta',2:'Em execução',3:'Finalizada',4:'Cancelada',5:'Faturado',6:'Agendada',
+  7:'Pausada',8:'Passou pelo PDV',9:'Faturada por Dav OS/NF',10:'Mesclado',11:'Duplicado',
+  12:'Serviço não executado',13:'Orçamento',14:'Faturada parcialmente',15:'Retirada'};
+const OS_CANCEL_STATUSES = new Set([4]);
+const OS_DONE_STATUSES = new Set([3,5,9,14]);
 const CANCEL_STATUSES = new Set([3,13]);
 
 const fmtMoney = v => (v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
@@ -1066,23 +1184,38 @@ function setLoading(on, msg){
 
 async function fetchProdutosNomes(codigos){
   const map = new Map();
-  const list = [...codigos].filter(Boolean);
-  if(list.length === 0) return map;
-  const CONCURRENCY = 8;
-  let idx = 0, done = 0;
-  async function worker(){
-    while(idx < list.length){
-      const i = idx++;
-      const codigo = list[i];
-      try{
-        const p = await apiGet('/public-api/v1/produtos/' + encodeURIComponent(codigo));
-        if(p && p.nome) map.set(codigo, p.nome);
-      }catch(e){ /* produto sem acesso/inexistente — mantém o código como rótulo */ }
-      done++;
-      setLoading(true, 'Carregando nomes de produtos… ' + done + ' de ' + list.length);
+  const wanted = new Set([...codigos].filter(Boolean));
+  if(wanted.size === 0) return map;
+
+  const produtos = await fetchAllPaginated('/public-api/v1/produtos', {}, n => {
+    setLoading(true, 'Carregando catálogo de produtos… ' + n + ' registros');
+  }, 20000);
+
+  produtos.forEach(p=>{
+    if(p && p.codigo && p.nome) map.set(String(p.codigo), p.nome);
+  });
+
+  // Fallback: qualquer código pedido que não veio no catálogo em lote (ex.: catálogo
+  // muito grande e cortado pelo limite) é buscado individualmente, só esses casos.
+  const faltando = [...wanted].filter(c=>!map.has(String(c)));
+  if(faltando.length){
+    const CONCURRENCY = 8;
+    let idx = 0, done = 0;
+    async function worker(){
+      while(idx < faltando.length){
+        const i = idx++;
+        const codigo = faltando[i];
+        try{
+          const p = await apiGet('/public-api/v1/produtos/' + encodeURIComponent(codigo));
+          if(p && p.nome) map.set(String(codigo), p.nome);
+        }catch(e){ /* produto sem acesso/inexistente — mantém o código como rótulo */ }
+        done++;
+        setLoading(true, 'Completando nomes de produtos… ' + done + ' de ' + faltando.length);
+      }
     }
+    await Promise.all(Array.from({length:Math.min(CONCURRENCY,faltando.length)}, worker));
   }
-  await Promise.all(Array.from({length:Math.min(CONCURRENCY,list.length)}, worker));
+
   return map;
 }
 
@@ -1133,6 +1266,26 @@ async function loadAllData(){
     state.moduleErrors.produtos = e.message;
   }
 
+  setLoading(true, 'Carregando ordens de serviço…');
+  try{
+    state.ordemServico = await fetchAllPaginated('/public-api/v1/ordem-servico',
+      { 'dataOrdemServico.ge': state.dataInicio, 'dataOrdemServico.le': state.dataFim },
+      n => setLoading(true, 'Carregando ordens de serviço… ' + n + ' registros'));
+  }catch(e){
+    state.ordemServico = [];
+    state.moduleErrors.ordemServico = e.message;
+  }
+
+  setLoading(true, 'Carregando notas fiscais de fornecedor…');
+  try{
+    state.notaFornecedor = await fetchAllPaginated('/public-api/v1/item-nota-entrada',
+      { 'dataEntrada.ge': state.dataInicio, 'dataEntrada.le': state.dataFim },
+      n => setLoading(true, 'Carregando notas de fornecedor… ' + n + ' registros'));
+  }catch(e){
+    state.notaFornecedor = [];
+    state.moduleErrors.notaFornecedor = e.message;
+  }
+
   setLoading(false);
 }
 
@@ -1181,6 +1334,8 @@ function renderOverview(){
   const orc = davs.filter(d=>d.tipoDocumento===2);
   const ped = davs.filter(d=>d.tipoDocumento===4);
   const cancelados = davs.filter(d=>CANCEL_STATUSES.has(d.status)).length;
+  const notasFiscais = davs.filter(d=>d.status===4);
+  const valorNotasFiscais = notasFiscais.reduce((s,d)=>s+(d.valor||0),0);
   const finAbertos = state.financeiro.filter(f=>f.status==='A');
   const saldoAberto = finAbertos.reduce((s,f)=>s+(f.saldo!=null?f.saldo:f.valor||0),0);
 
@@ -1189,6 +1344,7 @@ function renderOverview(){
       statWidget('Total em documentos', fmtMoney(totalValor), davs.length + ' DAVs no período'),
       statWidget('Orçamentos', orc.length, 'valor: ' + fmtMoney(orc.reduce((s,d)=>s+(d.valor||0),0))),
       statWidget('Pedidos de venda', ped.length, 'valor: ' + fmtMoney(ped.reduce((s,d)=>s+(d.valor||0),0))),
+      statWidget('Notas fiscais emitidas (NF-e/NFC-e)', fmtNum(notasFiscais.length), 'valor: ' + fmtMoney(valorNotasFiscais), 'green'),
       statWidget('Documentos cancelados', cancelados, ((davs.length? (cancelados/davs.length*100):0).toFixed(1)) + '% do total', cancelados>0?'red':'')
     ].join(''),
     !finOk ? moduleWarningWidget('Financeiro indisponível', 'Módulo financeiro não respondeu neste servidor: ' + state.moduleErrors.financeiro) : [
@@ -1250,8 +1406,8 @@ function statWidget(label, value, foot, cls){
 }
 
 /* ================= SELEÇÃO DE LINHAS / VISÃO FILTRADA (por tabela) ================= */
-const tableView = { Vendas:[], Fin:[], Pedidos:[], Orc:[] };
-const tableSelection = { Vendas:new Set(), Fin:new Set(), Pedidos:new Set(), Orc:new Set() };
+const tableView = { Vendas:[], Fin:[], Pedidos:[], Orc:[], OS:[], NF:[] };
+const tableSelection = { Vendas:new Set(), Fin:new Set(), Pedidos:new Set(), Orc:new Set(), OS:new Set(), NF:new Set() };
 
 function assignIds(rows){
   rows.forEach((r,i)=>{ r._id = i; });
@@ -1271,7 +1427,7 @@ function toggleSelectAll(key, checked){
     toggleRowSelection(key, Number(b.dataset.id), checked);
   });
 }
-const COUNT_EL = { Vendas:'vendasCount', Fin:'finCount', Pedidos:'pedidosCount', Orc:'orcCount' };
+const COUNT_EL = { Vendas:'vendasCount', Fin:'finCount', Pedidos:'pedidosCount', Orc:'orcCount', OS:'osCount', NF:'nfCount' };
 function updateCountLabel(key){
   const el = document.getElementById(COUNT_EL[key]);
   if(!el) return;
@@ -1494,6 +1650,114 @@ function esc(s){
   return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
+/* ================= RENDER: ORDENS DE SERVIÇO ================= */
+function renderOrdemServico(){
+  if(state.moduleErrors.ordemServico){
+    document.getElementById('kpiOS').innerHTML = moduleWarningWidget('Ordens de serviço indisponível', 'Não foi possível carregar ordens de serviço neste servidor: ' + state.moduleErrors.ordemServico);
+    destroyChart('OSStatus'); destroyChart('OSDia');
+    renderOSTable([]);
+    return;
+  }
+  const rows = assignIds(state.ordemServico.slice());
+  const totalValor = rows.reduce((s,o)=>s+(o.valor||0),0);
+  const canceladas = rows.filter(o=>OS_CANCEL_STATUSES.has(o.status)).length;
+  const finalizadas = rows.filter(o=>OS_DONE_STATUSES.has(o.status)).length;
+
+  document.getElementById('kpiOS').innerHTML = [
+    statWidget('Ordens no período', fmtNum(rows.length)),
+    statWidget('Valor total', fmtMoney(totalValor)),
+    statWidget('Finalizadas/faturadas', finalizadas, rows.length ? (finalizadas/rows.length*100).toFixed(1)+'% do total':'', 'green'),
+    statWidget('Canceladas', canceladas, rows.length ? (canceladas/rows.length*100).toFixed(1)+'% do total':'', canceladas?'red':'')
+  ].join('');
+
+  const porStatus = groupSum(rows, o=>STATUS_OS[o.status]||o.status, ()=>1);
+  destroyChart('OSStatus');
+  charts.OSStatus = new Chart(document.getElementById('chartOSStatus'), {
+    type:'bar',
+    data:{ labels:[...porStatus.keys()], datasets:[{ label:'Qtd', data:[...porStatus.values()], backgroundColor:'#4f94c4' }] },
+    options: baseChartOptions({ indexAxis:'y' })
+  });
+
+  const porDia = groupSum(rows, o=>o.dataOrdemServico||o.data, o=>o.valor);
+  const dias = [...porDia.keys()].sort();
+  destroyChart('OSDia');
+  charts.OSDia = new Chart(document.getElementById('chartOSDia'), {
+    type:'line',
+    data:{ labels:dias, datasets:[{ label:'Valor (R$)', data:dias.map(d=>porDia.get(d)), borderColor:'#eeb15f', backgroundColor:'rgba(238,177,95,0.2)', fill:true, tension:0.25, pointRadius:2 }] },
+    options: baseChartOptions()
+  });
+
+  renderOSTable(rows);
+  window.__osRowsFull = rows;
+}
+
+function renderOSTable(rows){
+  tableView.OS = rows;
+  const shown = rows.slice(0,300);
+  updateCountLabel('OS');
+  document.querySelector('#tblOS tbody').innerHTML = shown.map(o=>{
+    const stClass = OS_CANCEL_STATUSES.has(o.status) ? 'cancel' : (OS_DONE_STATUSES.has(o.status) ? 'done' : 'open');
+    return '<tr data-rowkey="OS-'+o._id+'" class="'+(tableSelection.OS.has(o._id)?'row-selected':'')+'">'+
+      '<td class="chk-col"><input type="checkbox" class="rowchk-OS" data-id="'+o._id+'" '+(tableSelection.OS.has(o._id)?'checked':'')+' onchange="toggleRowSelection(\'OS\', '+o._id+', this.checked)"></td>'+
+      '<td>'+o.codigo+'</td><td>'+(o.dataOrdemServico||o.data||'')+'</td><td>'+esc(o.nomeCliente||'—')+'</td><td>'+esc(o.nomeAtendente||'—')+'</td>'+
+      '<td class="num">'+fmtMoney(o.valorProdutos)+'</td><td class="num">'+fmtMoney(o.valorServicos)+'</td><td class="num">'+fmtMoney(o.valor)+'</td>'+
+      '<td><span class="pill '+stClass+'">'+(STATUS_OS[o.status]||o.status)+'</span></td></tr>';
+  }).join('') || '<tr><td colspan="9" class="empty-note">Nenhuma ordem de serviço encontrada.</td></tr>';
+}
+
+/* ================= RENDER: NOTAS FISCAIS DE FORNECEDOR ================= */
+function renderNotaFornecedor(){
+  if(state.moduleErrors.notaFornecedor){
+    document.getElementById('kpiNF').innerHTML = moduleWarningWidget('Notas de fornecedor indisponível', 'Não foi possível carregar notas de fornecedor neste servidor: ' + state.moduleErrors.notaFornecedor);
+    destroyChart('NFFornecedores'); destroyChart('NFDia');
+    renderNFTable([]);
+    return;
+  }
+  const rows = assignIds(state.notaFornecedor.slice());
+  const totalValor = rows.reduce((s,r)=>s+(r.valorTotal||0),0);
+  const notasUnicas = new Set(rows.map(r=>r.numeroNotaFiscal).filter(Boolean)).size;
+  const fornecedoresUnicos = new Set(rows.map(r=>r.fornecedorCodigo).filter(Boolean)).size;
+
+  document.getElementById('kpiNF').innerHTML = [
+    statWidget('Itens de entrada', fmtNum(rows.length)),
+    statWidget('Notas distintas', fmtNum(notasUnicas)),
+    statWidget('Fornecedores distintos', fmtNum(fornecedoresUnicos)),
+    statWidget('Valor total', fmtMoney(totalValor))
+  ].join('');
+
+  const porFornecedor = topN(groupSum(rows, r=>r.fornecedorNome||r.fornecedorCodigo, r=>r.valorTotal), 10);
+  destroyChart('NFFornecedores');
+  charts.NFFornecedores = new Chart(document.getElementById('chartNFFornecedores'), {
+    type:'bar',
+    data:{ labels:porFornecedor.map(x=>x[0]), datasets:[{ label:'Valor (R$)', data:porFornecedor.map(x=>x[1]), backgroundColor:'#e2564c' }] },
+    options: baseChartOptions({ indexAxis:'y' })
+  });
+
+  const porDia = groupSum(rows, r=>r.dataEntrada, r=>r.valorTotal);
+  const dias = [...porDia.keys()].sort();
+  destroyChart('NFDia');
+  charts.NFDia = new Chart(document.getElementById('chartNFDia'), {
+    type:'line',
+    data:{ labels:dias, datasets:[{ label:'Valor (R$)', data:dias.map(d=>porDia.get(d)), borderColor:'#93c9ba', backgroundColor:'rgba(147,201,186,0.2)', fill:true, tension:0.25, pointRadius:2 }] },
+    options: baseChartOptions()
+  });
+
+  renderNFTable(rows);
+  window.__nfRowsFull = rows;
+}
+
+function renderNFTable(rows){
+  tableView.NF = rows;
+  const shown = rows.slice(0,300);
+  updateCountLabel('NF');
+  document.querySelector('#tblNF tbody').innerHTML = shown.map(r=>
+    '<tr data-rowkey="NF-'+r._id+'" class="'+(tableSelection.NF.has(r._id)?'row-selected':'')+'">'+
+    '<td class="chk-col"><input type="checkbox" class="rowchk-NF" data-id="'+r._id+'" '+(tableSelection.NF.has(r._id)?'checked':'')+' onchange="toggleRowSelection(\'NF\', '+r._id+', this.checked)"></td>'+
+    '<td>'+(r.dataEntrada||'')+'</td><td>'+esc(r.numeroNotaFiscal||'—')+'</td><td>'+esc(r.modelo||'—')+'</td><td>'+esc(r.fornecedorNome||'—')+'</td>'+
+    '<td>'+esc(r.produtoDescricao||r.produtoCodigo||'—')+'</td><td class="num">'+fmtNum(r.quantidade)+'</td><td class="num">'+fmtMoney(r.valorTotal)+'</td></tr>'
+  ).join('') || '<tr><td colspan="8" class="empty-note">Nenhuma nota de fornecedor encontrada.</td></tr>';
+}
+
 function stampAllTimestamps(){
   const now = fmtTimestamp();
   document.querySelectorAll('[data-ts]').forEach(el=>{ el.textContent = 'Consultado em ' + now; });
@@ -1506,6 +1770,8 @@ function renderAll(){
   renderFinanceiro();
   renderDocList(4,'Pedidos');
   renderDocList(2,'Orcamentos');
+  renderOrdemServico();
+  renderNotaFornecedor();
   stampAllTimestamps();
 }
 
@@ -1548,11 +1814,25 @@ document.getElementById('exportOrc').addEventListener('click', ()=>{
     d=>[d.codigo,d.data,d.nomeCliente,d.nomeVendedor,d.valor,STATUS_DAV[d.status]||d.status]);
   downloadCSV(csv, 'orcamentos' + exportSuffix('Orc', (window.__orcRowsFull||[]).length) + '.csv');
 });
+document.getElementById('exportOS').addEventListener('click', ()=>{
+  const rows = getExportRows('OS');
+  const csv = toCSV(rows, ['Codigo','Data','Cliente','Atendente','ValorProdutos','ValorServicos','Valor','Status'],
+    o=>[o.codigo,o.dataOrdemServico||o.data,o.nomeCliente,o.nomeAtendente,o.valorProdutos,o.valorServicos,o.valor,STATUS_OS[o.status]||o.status]);
+  downloadCSV(csv, 'ordens_de_servico' + exportSuffix('OS', (window.__osRowsFull||[]).length) + '.csv');
+});
+document.getElementById('exportNF').addEventListener('click', ()=>{
+  const rows = getExportRows('NF');
+  const csv = toCSV(rows, ['DataEntrada','NumeroNota','Modelo','Fornecedor','Produto','Quantidade','ValorTotal'],
+    r=>[r.dataEntrada,r.numeroNotaFiscal,r.modelo,r.fornecedorNome,r.produtoDescricao||r.produtoCodigo,r.quantidade,r.valorTotal]);
+  downloadCSV(csv, 'notas_fornecedor' + exportSuffix('NF', (window.__nfRowsFull||[]).length) + '.csv');
+});
 
 /* ================= EXPORTAÇÃO PDF / EXCEL ================= */
 const VENDAS_HEADERS = ['Data','DAV','Cliente','Vendedor','Código','Produto','Qtd','Preço unit.','Total'];
 const FIN_HEADERS = ['Documento','Entidade','Tipo','Emissão','Vencimento','Valor','Saldo','Status'];
 const DOC_HEADERS = ['Código','Data','Cliente','Vendedor','Valor','Status'];
+const OS_HEADERS = ['Código','Data','Cliente','Atendente','Produtos','Serviços','Total','Status'];
+const NF_HEADERS = ['Data entrada','Nota','Modelo','Fornecedor','Produto','Qtd','Valor total'];
 
 function buildVendasRowsRaw(){
   return getExportRows('Vendas').map(r=>[r.data||'', r.dav, r.cliente, r.vendedor, r.produto, r.produtoNome || r.produto, r.qtd||0, r.precoUnit||0, r.total||0]);
@@ -1565,6 +1845,12 @@ function buildFinRowsRaw(){
 }
 function buildDocRowsRaw(arr){
   return arr.map(d=>[d.codigo, d.data||'', d.nomeCliente||'', d.nomeVendedor||'', d.valor||0, STATUS_DAV[d.status]||d.status]);
+}
+function buildOSRowsRaw(arr){
+  return arr.map(o=>[o.codigo, o.dataOrdemServico||o.data||'', o.nomeCliente||'', o.nomeAtendente||'', o.valorProdutos||0, o.valorServicos||0, o.valor||0, STATUS_OS[o.status]||o.status]);
+}
+function buildNFRowsRaw(arr){
+  return arr.map(r=>[r.dataEntrada||'', r.numeroNotaFiscal||'', r.modelo||'', r.fornecedorNome||'', r.produtoDescricao||r.produtoCodigo||'', r.quantidade||0, r.valorTotal||0]);
 }
 function buildResumoRows(){
   const davs = state.davs;
@@ -1663,6 +1949,8 @@ wireTableExport('Vendas', VENDAS_HEADERS, buildVendasRowsRaw, [7,8], [6], 'venda
 wireTableExport('Fin', FIN_HEADERS, buildFinRowsRaw, [5,6], [], 'financeiro', 'Documentos financeiros', ()=>state.financeiro.length);
 wireTableExport('Pedidos', DOC_HEADERS, ()=>buildDocRowsRaw(getExportRows('Pedidos')), [4], [], 'pedidos_de_venda', 'Pedidos de venda', ()=>(window.__pedidosRowsFull||[]).length);
 wireTableExport('Orc', DOC_HEADERS, ()=>buildDocRowsRaw(getExportRows('Orc')), [4], [], 'orcamentos', 'Orçamentos', ()=>(window.__orcRowsFull||[]).length);
+wireTableExport('OS', OS_HEADERS, ()=>buildOSRowsRaw(getExportRows('OS')), [4,5,6], [], 'ordens_de_servico', 'Ordens de serviço', ()=>(window.__osRowsFull||[]).length);
+wireTableExport('NF', NF_HEADERS, ()=>buildNFRowsRaw(getExportRows('NF')), [6], [5], 'notas_fornecedor', 'Notas fiscais de fornecedor', ()=>(window.__nfRowsFull||[]).length);
 
 /* ================= FILTROS DE BUSCA NAS TABELAS ================= */
 function wireTableFilter(inputId, getFullRows, matchFields, renderFn, extraArg){
@@ -1692,6 +1980,14 @@ wireTableFilter('filtroOrc', ()=>window.__orcRowsFull||[], [
   r=>r.codigo, r=>r.data, r=>r.nomeCliente, r=>r.nomeVendedor, r=>STATUS_DAV[r.status]||r.status
 ], renderDocTable, 2);
 
+wireTableFilter('filtroOS', ()=>window.__osRowsFull||[], [
+  r=>r.codigo, r=>r.dataOrdemServico, r=>r.data, r=>r.nomeCliente, r=>r.nomeAtendente, r=>STATUS_OS[r.status]||r.status
+], renderOSTable);
+
+wireTableFilter('filtroNF', ()=>window.__nfRowsFull||[], [
+  r=>r.numeroNotaFiscal, r=>r.fornecedorNome, r=>r.produtoDescricao, r=>r.produtoCodigo, r=>r.modelo
+], renderNFTable);
+
 function buildVendasRowsFullRaw(){
   return (window.__vendasRowsFull || []).map(r=>[r.data||'', r.dav, r.cliente, r.vendedor, r.produto, r.produtoNome || r.produto, r.qtd||0, r.precoUnit||0, r.total||0]);
 }
@@ -1709,6 +2005,8 @@ document.getElementById('btnExportXLSXCompleto').addEventListener('click', ()=>{
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([FIN_HEADERS, ...buildFinRowsFullRaw()]), 'Financeiro');
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([DOC_HEADERS, ...buildDocRowsRaw(window.__pedidosRowsFull||[])]), 'Pedidos');
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([DOC_HEADERS, ...buildDocRowsRaw(window.__orcRowsFull||[])]), 'Orcamentos');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([OS_HEADERS, ...buildOSRowsRaw(window.__osRowsFull||[])]), 'OrdensServico');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([NF_HEADERS, ...buildNFRowsRaw(window.__nfRowsFull||[])]), 'NotasFornecedor');
   XLSX.writeFile(wb, 'painel_uniplus_completo.xlsx');
 });
 
@@ -1740,6 +2038,8 @@ document.getElementById('btnExportPDFCompleto').addEventListener('click', ()=>{
   section('Financeiro', FIN_HEADERS, buildFinRowsFullRaw(), [5,6], []);
   section('Pedidos de venda', DOC_HEADERS, buildDocRowsRaw(window.__pedidosRowsFull||[]), [4], []);
   section('Orçamentos', DOC_HEADERS, buildDocRowsRaw(window.__orcRowsFull||[]), [4], []);
+  section('Ordens de serviço', OS_HEADERS, buildOSRowsRaw(window.__osRowsFull||[]), [4,5,6], []);
+  section('Notas fiscais de fornecedor', NF_HEADERS, buildNFRowsRaw(window.__nfRowsFull||[]), [6], [5]);
 
   doc.save('painel_uniplus_completo.pdf');
 });
