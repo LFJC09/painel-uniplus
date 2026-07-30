@@ -180,8 +180,8 @@
     --text:#2c3646;
     --muted:#8993a1;
     --muted-dim:#aab2bc;
-    --topbar:#b64d43;
-    --topbar-dark:#933e36;
+    --topbar:#326576;
+    --topbar-dark:#234a57;
     --tabstrip:#f4f5f7;
     --red:#e2564c;
     --red-soft:#ef8079;
@@ -251,7 +251,7 @@
   }
   .side-nav .item .ic{width:8px;height:8px;border-radius:2px;background:var(--muted-dim);}
   .side-nav .item:hover{color:var(--text);}
-  .side-nav .item.active{ color:var(--topbar); border-left-color:var(--topbar); background:#fbf1f0; }
+  .side-nav .item.active{ color:var(--topbar); border-left-color:var(--topbar); background:#e8f1f2; }
   .side-nav .item.active .ic{background:var(--topbar);}
   .side-foot{padding:10px 18px;border-top:1px solid var(--border-soft);}
   .side-foot .item{padding:9px 0;font-size:11.5px;color:var(--muted-dim);cursor:pointer;display:flex;gap:8px;align-items:center;}
@@ -338,7 +338,7 @@
   .table-scroll{max-height:420px;overflow:auto;border:1px solid var(--border);border-radius:4px;}
   .chk-col{width:34px;text-align:center;}
   .chk-col input, td.chk-col input{cursor:pointer;}
-  tr.row-selected{background:#fbf1f0;}
+  tr.row-selected{background:#e8f1f2;}
 
   .pill{
     display:inline-block;padding:2px 9px;font-size:10.5px;border-radius:20px;border:1px solid var(--border);color:var(--muted);
@@ -495,7 +495,7 @@
         </div>
       </details>
 
-      <div class="ug-row2">
+      <div class="ug-row2" style="display:none;">
         <div class="ug-subfield">
           <label for="fDataIni">Período — de</label>
           <input id="fDataIni" type="date">
@@ -947,7 +947,7 @@
             <div class="table-filter-row"><input type="text" id="filtroNF" placeholder="Filtrar por nota, fornecedor ou produto..."></div>
             <div class="table-scroll">
               <table id="tblNF" data-tablekey="NF">
-                <thead><tr><th class="chk-col"><input type="checkbox" id="selAllNF" onchange="toggleSelectAll('NF', this.checked)"></th><th data-sort="dataEntrada">Data entrada</th><th data-sort="numeroNotaFiscal">Nota</th><th data-sort="modelo">Modelo</th><th data-sort="fornecedorNome">Fornecedor</th><th data-sort="produto">Produto</th><th class="num" data-sort="quantidade">Qtd</th><th class="num" data-sort="precoUnit">Preço unit.</th><th class="num" data-sort="valorTotal">Valor total</th></tr></thead>
+                <thead><tr><th class="chk-col"><input type="checkbox" id="selAllNF" onchange="toggleSelectAll('NF', this.checked)"></th><th data-sort="dataEntrada">Data entrada</th><th data-sort="numeroNotaFiscal">Nota</th><th data-sort="modelo">Modelo</th><th data-sort="fornecedorNome">Fornecedor</th><th data-sort="produto">Produto</th><th class="num" data-sort="quantidade">Qtd</th><th class="num" data-sort="precoUnit">Preço unit.</th><th class="num" data-sort="valorItem">Valor do item</th><th class="num" data-sort="valorTotal">Total da nota</th></tr></thead>
                 <tbody></tbody>
               </table>
             </div>
@@ -1125,6 +1125,9 @@ function fmtCnpj(v){
 function qtyNF(r){
   const v = r.quantidade ?? r.qtd ?? r.Quantidade ?? r.qtde ?? r.quantidadeItem ?? r.quantidadeEntrada;
   return v!=null ? v : 0;
+}
+function itemValorNF(r){
+  return (Number(qtyNF(r))||0) * (Number(r.precoUnitario)||0);
 }
 const fmtTimestamp = () => new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
 
@@ -1743,18 +1746,28 @@ function renderNotaFornecedor(){
     return;
   }
   const rows = assignIds(state.notaFornecedor.slice());
-  const totalValor = rows.reduce((s,r)=>s+(r.valorTotal||0),0);
-  const notasUnicas = new Set(rows.map(r=>r.numeroNotaFiscal).filter(Boolean)).size;
+
+  // valorTotal/valorProdutos vêm da NOTA inteira (repetidos em cada item, conforme a
+  // documentação da API), não do item — por isso deduplicamos por número da nota
+  // antes de somar, senão o mesmo valor é contado uma vez por item.
+  const notasMap = new Map();
+  rows.forEach(r=>{
+    const key = r.numeroNotaFiscal || ('~semNumero~' + r._id);
+    if(!notasMap.has(key)) notasMap.set(key, r);
+  });
+  const notasUnicasArr = [...notasMap.values()];
+  const totalValor = notasUnicasArr.reduce((s,r)=>s+(r.valorTotal||0),0);
+  const notasUnicas = notasUnicasArr.length;
   const fornecedoresUnicos = new Set(rows.map(r=>r.fornecedorCodigo).filter(Boolean)).size;
 
   document.getElementById('kpiNF').innerHTML = [
     statWidget('Itens de entrada', fmtNum(rows.length)),
     statWidget('Notas distintas', fmtNum(notasUnicas)),
     statWidget('Fornecedores distintos', fmtNum(fornecedoresUnicos)),
-    statWidget('Valor total', fmtMoney(totalValor))
+    statWidget('Valor total das notas', fmtMoney(totalValor))
   ].join('');
 
-  const porFornecedor = topN(groupSum(rows, r=>r.fornecedorNome||r.fornecedorCodigo, r=>r.valorTotal), 10);
+  const porFornecedor = topN(groupSum(notasUnicasArr, r=>r.fornecedorNome||r.fornecedorCodigo, r=>r.valorTotal), 10);
   destroyChart('NFFornecedores');
   charts.NFFornecedores = new Chart(document.getElementById('chartNFFornecedores'), {
     type:'bar',
@@ -1762,7 +1775,7 @@ function renderNotaFornecedor(){
     options: baseChartOptions({ indexAxis:'y' })
   });
 
-  const porDia = groupSum(rows, r=>r.dataEntrada, r=>r.valorTotal);
+  const porDia = groupSum(notasUnicasArr, r=>r.dataEntrada, r=>r.valorTotal);
   const dias = [...porDia.keys()].sort();
   destroyChart('NFDia');
   charts.NFDia = new Chart(document.getElementById('chartNFDia'), {
@@ -1783,8 +1796,8 @@ function renderNFTable(rows){
     '<tr data-rowkey="NF-'+r._id+'" class="'+(tableSelection.NF.has(r._id)?'row-selected':'')+'">'+
     '<td class="chk-col"><input type="checkbox" class="rowchk-NF" data-id="'+r._id+'" '+(tableSelection.NF.has(r._id)?'checked':'')+' onchange="toggleRowSelection(\'NF\', '+r._id+', this.checked)"></td>'+
     '<td>'+fmtDate(r.dataEntrada)+'</td><td>'+esc(r.numeroNotaFiscal||'—')+'</td><td>'+esc(r.modelo||'—')+'</td><td>'+esc(r.fornecedorNome||'—')+'</td>'+
-    '<td>'+esc(r.produtoDescricao||r.produtoCodigo||'—')+'</td><td class="num">'+fmtNum(qtyNF(r))+'</td><td class="num">'+fmtMoney(r.precoUnitario)+'</td><td class="num">'+fmtMoney(r.valorTotal)+'</td></tr>'
-  ).join('') || '<tr><td colspan="9" class="empty-note">Nenhuma nota de fornecedor encontrada.</td></tr>';
+    '<td>'+esc(r.produtoDescricao||r.produtoCodigo||'—')+'</td><td class="num">'+fmtNum(qtyNF(r))+'</td><td class="num">'+fmtMoney(r.precoUnitario)+'</td><td class="num">'+fmtMoney(itemValorNF(r))+'</td><td class="num">'+fmtMoney(r.valorTotal)+'</td></tr>'
+  ).join('') || '<tr><td colspan="10" class="empty-note">Nenhuma nota de fornecedor encontrada.</td></tr>';
 }
 
 function stampAllTimestamps(){
@@ -1851,8 +1864,8 @@ document.getElementById('exportOS').addEventListener('click', ()=>{
 });
 document.getElementById('exportNF').addEventListener('click', ()=>{
   const rows = getExportRows('NF');
-  const csv = toCSV(rows, ['DataEntrada','NumeroNota','Modelo','Fornecedor','Produto','Quantidade','PrecoUnitario','ValorTotal'],
-    r=>[fmtDate(r.dataEntrada),r.numeroNotaFiscal,r.modelo,r.fornecedorNome,r.produtoDescricao||r.produtoCodigo,qtyNF(r),r.precoUnitario||0,r.valorTotal]);
+  const csv = toCSV(rows, ['DataEntrada','NumeroNota','Modelo','Fornecedor','Produto','Quantidade','PrecoUnitario','ValorItem','TotalNota'],
+    r=>[fmtDate(r.dataEntrada),r.numeroNotaFiscal,r.modelo,r.fornecedorNome,r.produtoDescricao||r.produtoCodigo,qtyNF(r),r.precoUnitario||0,itemValorNF(r),r.valorTotal]);
   downloadCSV(csv, 'notas_fornecedor' + exportSuffix('NF', (window.__nfRowsFull||[]).length) + '.csv');
 });
 
@@ -1861,7 +1874,7 @@ const VENDAS_HEADERS = ['Data','DAV','Cliente','Vendedor','Código','Produto','Q
 const FIN_HEADERS = ['Documento','Entidade','Tipo','Emissão','Vencimento','Valor','Saldo','Status'];
 const DOC_HEADERS = ['Código','Data','Cliente','Vendedor','Valor','Status'];
 const OS_HEADERS = ['Código','Data','Cliente','Atendente','Produtos','Serviços','Total','Status'];
-const NF_HEADERS = ['Data entrada','Nota','Modelo','Fornecedor','Produto','Qtd','Preço unit.','Valor total'];
+const NF_HEADERS = ['Data entrada','Nota','Modelo','Fornecedor','Produto','Qtd','Preço unit.','Valor do item','Total da nota'];
 
 function buildVendasRowsRaw(){
   return getExportRows('Vendas').map(r=>[fmtDate(r.data), r.dav, r.cliente, r.vendedor, r.produto, r.produtoNome || r.produto, r.qtd||0, r.precoUnit||0, r.total||0]);
@@ -1879,7 +1892,7 @@ function buildOSRowsRaw(arr){
   return arr.map(o=>[o.codigo, fmtDate(o.dataOrdemServico||o.data), o.nomeCliente||'', o.nomeAtendente||'', o.valorProdutos||0, o.valorServicos||0, o.valor||0, STATUS_OS[o.status]||o.status]);
 }
 function buildNFRowsRaw(arr){
-  return arr.map(r=>[fmtDate(r.dataEntrada), r.numeroNotaFiscal||'', r.modelo||'', r.fornecedorNome||'', r.produtoDescricao||r.produtoCodigo||'', qtyNF(r), r.precoUnitario||0, r.valorTotal||0]);
+  return arr.map(r=>[fmtDate(r.dataEntrada), r.numeroNotaFiscal||'', r.modelo||'', r.fornecedorNome||'', r.produtoDescricao||r.produtoCodigo||'', qtyNF(r), r.precoUnitario||0, itemValorNF(r), r.valorTotal||0]);
 }
 function buildResumoRows(){
   const davs = state.davs;
@@ -1985,7 +1998,7 @@ wireTableExport('Fin', FIN_HEADERS, buildFinRowsRaw, [5,6], [], 'financeiro', 'D
 wireTableExport('Pedidos', DOC_HEADERS, ()=>buildDocRowsRaw(getExportRows('Pedidos')), [4], [], 'pedidos_de_venda', 'Pedidos de venda', ()=>(window.__pedidosRowsFull||[]).length);
 wireTableExport('Orc', DOC_HEADERS, ()=>buildDocRowsRaw(getExportRows('Orc')), [4], [], 'orcamentos', 'Orçamentos', ()=>(window.__orcRowsFull||[]).length);
 wireTableExport('OS', OS_HEADERS, ()=>buildOSRowsRaw(getExportRows('OS')), [4,5,6], [], 'ordens_de_servico', 'Ordens de serviço', ()=>(window.__osRowsFull||[]).length);
-wireTableExport('NF', NF_HEADERS, ()=>buildNFRowsRaw(getExportRows('NF')), [6,7], [5], 'notas_fornecedor', 'Notas fiscais de fornecedor', ()=>(window.__nfRowsFull||[]).length);
+wireTableExport('NF', NF_HEADERS, ()=>buildNFRowsRaw(getExportRows('NF')), [6,7,8], [5], 'notas_fornecedor', 'Notas fiscais de fornecedor', ()=>(window.__nfRowsFull||[]).length);
 
 /* ================= FILTROS DE BUSCA NAS TABELAS ================= */
 function wireTableFilter(inputId, getFullRows, matchFields, renderFn, extraArg){
@@ -2053,7 +2066,8 @@ const SORT_ACCESSORS = {
     dataEntrada:{fn:r=>r.dataEntrada, numeric:false}, numeroNotaFiscal:{fn:r=>r.numeroNotaFiscal, numeric:false},
     modelo:{fn:r=>r.modelo, numeric:false}, fornecedorNome:{fn:r=>r.fornecedorNome, numeric:false},
     produto:{fn:r=>r.produtoDescricao||r.produtoCodigo, numeric:false},
-    quantidade:{fn:r=>qtyNF(r), numeric:true}, precoUnit:{fn:r=>r.precoUnitario, numeric:true}, valorTotal:{fn:r=>r.valorTotal, numeric:true}
+    quantidade:{fn:r=>qtyNF(r), numeric:true}, precoUnit:{fn:r=>r.precoUnitario, numeric:true},
+    valorItem:{fn:r=>itemValorNF(r), numeric:true}, valorTotal:{fn:r=>r.valorTotal, numeric:true}
   }
 };
 SORT_ACCESSORS.Orc = SORT_ACCESSORS.Pedidos;
@@ -2165,7 +2179,7 @@ document.getElementById('btnExportPDFCompleto').addEventListener('click', ()=>{
   section('Pedidos de venda', DOC_HEADERS, buildDocRowsRaw(window.__pedidosRowsFull||[]), [4], []);
   section('Orçamentos', DOC_HEADERS, buildDocRowsRaw(window.__orcRowsFull||[]), [4], []);
   section('Ordens de serviço', OS_HEADERS, buildOSRowsRaw(window.__osRowsFull||[]), [4,5,6], []);
-  section('Notas fiscais de fornecedor', NF_HEADERS, buildNFRowsRaw(window.__nfRowsFull||[]), [6,7], [5]);
+  section('Notas fiscais de fornecedor', NF_HEADERS, buildNFRowsRaw(window.__nfRowsFull||[]), [6,7,8], [5]);
 
   doc.save('painel_uniplus_completo.pdf');
 });
