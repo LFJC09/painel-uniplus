@@ -1,0 +1,2 @@
+# O uniplus_proxy.py usa apenas a biblioteca padrão do Python (nenhuma dependência externa).
+# Este arquivo existe só para o Render encontrar algo ao rodar "pip install -r requirements.txt".
