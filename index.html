@@ -635,7 +635,7 @@
       </nav>
       <div class="side-foot">
         <div class="item" id="btnConfiguracoes">⚙ CONFIGURAÇÕES</div>
-        <div class="item" style="cursor:default;font-size:10px;">Build 3.3</div>
+        <div class="item" style="cursor:default;font-size:10px;">Build 3.4</div>
       </div>
     </aside>
 
@@ -817,7 +817,7 @@
             <div class="table-filter-row"><input type="text" id="filtroVendasReal" placeholder="Filtrar por documento, cliente, vendedor ou chave..."></div>
             <div class="table-scroll">
               <table id="tblVendasReal" data-tablekey="VendasReal">
-                <thead><tr><th class="chk-col"><input type="checkbox" id="selAllVendasReal" onchange="toggleSelectAll('VendasReal', this.checked)"></th><th data-sort="emissao">Emissão</th><th data-sort="documento">Documento</th><th data-sort="nomeCliente">Cliente</th><th data-sort="nomeVendedor">Vendedor</th><th data-sort="origem">Origem</th><th class="num" data-sort="valorProdutos">Valor produtos</th><th class="num" data-sort="desconto">Desconto</th><th class="num" data-sort="valorTotal">Valor total</th><th>Chave de acesso</th></tr></thead>
+                <thead><tr><th class="chk-col"><input type="checkbox" id="selAllVendasReal" onchange="toggleSelectAll('VendasReal', this.checked)"></th><th data-sort="emissao">Emissão</th><th data-sort="documento">Documento</th><th data-sort="nomeCliente">Cliente</th><th data-sort="nomeVendedor">Vendedor</th><th data-sort="origem">Origem</th><th class="num" data-sort="valorProdutos">Valor bruto</th><th class="num" data-sort="desconto">Desconto</th><th class="num" data-sort="valorTotal">Valor líquido</th><th>Chave de acesso</th></tr></thead>
                 <tbody></tbody>
               </table>
             </div>
@@ -2482,7 +2482,7 @@ document.getElementById('exportVendas').addEventListener('click', ()=>{
 });
 document.getElementById('exportVendasReal').addEventListener('click', ()=>{
   const rows = getExportRows('VendasReal');
-  const csv = toCSV(rows, ['Emissao','Documento','Cliente','Vendedor','Origem','ValorProdutos','Desconto','ValorTotal','ChaveAcesso'],
+  const csv = toCSV(rows, ['Emissao','Documento','Cliente','Vendedor','Origem','ValorBruto','Desconto','ValorLiquido','ChaveAcesso'],
     v=>[fmtDate(v.emissao),v.documento,v.nomeCliente,v.nomeVendedor,origemVendaLabel(v),v.valorProdutos||0,v.desconto||0,v.valorTotal||0,v.chaveAcesso||'']);
   downloadCSV(csv, 'vendas_realizadas' + exportSuffix('VendasReal', (window.__vendasRealRowsFull||[]).length) + '.csv');
 });
@@ -2525,7 +2525,7 @@ document.getElementById('exportProducao').addEventListener('click', ()=>{
 
 /* ================= EXPORTAÇÃO PDF / EXCEL ================= */
 const VENDAS_HEADERS = ['Data','DAV','Cliente','Vendedor','Código','Produto','Qtd','Preço unit.','Total','Status'];
-const VENDAS_REAL_HEADERS = ['Emissão','Documento','Cliente','Vendedor','Origem','Valor produtos','Desconto','Valor total','Chave de acesso'];
+const VENDAS_REAL_HEADERS = ['Emissão','Documento','Cliente','Vendedor','Origem','Valor bruto','Desconto','Valor líquido','Chave de acesso'];
 const FIN_HEADERS = ['Documento','Entidade','Tipo','Emissão','Vencimento','Valor','Saldo','Status'];
 const DOC_HEADERS = ['Código','Data','Cliente','Vendedor','Valor','Status'];
 const OS_HEADERS = ['Código','Data','Cliente','Atendente','Produtos','Serviços','Total','Status'];
