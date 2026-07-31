@@ -533,6 +533,9 @@
       </a>
     </div>
     <div class="actions">
+      <select class="tbtn" id="filialSelect" title="Filial" style="min-width:160px;">
+        <option value="">Todas as filiais</option>
+      </select>
       <input type="date" id="topDataIni">
       <span class="period-sep">até</span>
       <input type="date" id="topDataFim">
@@ -555,7 +558,8 @@
     <aside class="sidebar">
       <nav class="side-nav">
         <div class="item active" data-view="visaoGeral"><span class="ic"></span>VISÃO GERAL</div>
-        <div class="item" data-view="vendas"><span class="ic"></span>VENDAS</div>
+        <div class="item" data-view="vendas"><span class="ic"></span>VENDAS NÃO REALIZADAS</div>
+        <div class="item" data-view="vendasRealizadas"><span class="ic"></span>VENDAS REALIZADAS</div>
         <div class="item" data-view="financeiro"><span class="ic"></span>FINANCEIRO</div>
         <div class="item" data-view="pedidos"><span class="ic"></span>PEDIDOS</div>
         <div class="item" data-view="orcamentos"><span class="ic"></span>ORÇAMENTOS</div>
@@ -673,6 +677,72 @@
             <div class="table-scroll">
               <table id="tblVendas" data-tablekey="Vendas">
                 <thead><tr><th class="chk-col"><input type="checkbox" id="selAllVendas" onchange="toggleSelectAll('Vendas', this.checked)"></th><th data-sort="data">Data</th><th data-sort="dav">DAV</th><th data-sort="cliente">Cliente</th><th data-sort="vendedor">Vendedor</th><th data-sort="produto">Código</th><th data-sort="produtoNome">Produto</th><th class="num" data-sort="qtd">Qtd</th><th class="num" data-sort="precoUnit">Preço unit.</th><th class="num" data-sort="total">Total item</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="widget-foot"><span>&nbsp;</span><span class="ts" data-ts>—</span></div>
+        </div>
+      </section>
+
+      <!-- ---- VENDAS REALIZADAS (NOTA FISCAL GERADA) ---- -->
+      <section class="view" id="view-vendasRealizadas">
+        <div class="wgrid">
+          <div class="widget" style="grid-column:1/-1;">
+            <div class="widget-head"><div class="widget-titles"><h2>Sobre este relatório</h2></div></div>
+            <div class="widget-body">
+              <div style="padding:6px 0;color:var(--muted);font-size:12.5px;line-height:1.6;">
+                Mostra os documentos já <strong>faturados</strong> (status "Nota fiscal gerada" no Uniplus) no período — ou seja, vendas realmente concluídas, e não apenas orçamentos/pedidos em aberto.
+                <br><strong>Importante:</strong> a API pública do Uniplus não informa o modelo fiscal do documento (NF-e ou NFC-e) — por isso este relatório traz o total faturado <strong>sem separar por modelo</strong>, para não arriscar mostrar uma classificação incorreta. Para saber o modelo de cada nota, consulte diretamente o Uniplus Web.
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="wgrid" id="kpiVendasReal"></div>
+        <div class="wgrid cols-2">
+          <div class="widget" data-widget="vendasRealDia">
+            <div class="widget-head">
+              <div class="widget-titles"><h2>Vendas realizadas por dia</h2></div>
+              <div class="widget-actions">
+                <button class="wicon" data-action="refresh" title="Atualizar">⟳</button>
+                <button class="wicon" data-action="expand" title="Expandir">⤢</button>
+                <button class="wicon" data-action="close" title="Remover">✕</button>
+              </div>
+            </div>
+            <div class="widget-body"><div class="chart-wrap"><canvas id="chartVendasRealDia"></canvas></div></div>
+            <div class="widget-foot"><span>&nbsp;</span><span class="ts" data-ts>—</span></div>
+          </div>
+          <div class="widget" data-widget="vendasRealVendedores">
+            <div class="widget-head">
+              <div class="widget-titles"><h2>Top 10 vendedores</h2><span class="wsub">Vendas realizadas no período</span></div>
+              <div class="widget-actions">
+                <button class="wicon" data-action="refresh" title="Atualizar">⟳</button>
+                <button class="wicon" data-action="expand" title="Expandir">⤢</button>
+                <button class="wicon" data-action="close" title="Remover">✕</button>
+              </div>
+            </div>
+            <div class="widget-body"><div class="chart-wrap"><canvas id="chartVendasRealVendedores"></canvas></div></div>
+            <div class="widget-foot"><span>&nbsp;</span><span class="ts" data-ts>—</span></div>
+          </div>
+        </div>
+        <div class="widget">
+          <div class="widget-head">
+            <div class="widget-titles"><h2>Itens faturados</h2><span class="wsub" id="vendasRealCount"></span></div>
+            <div class="widget-actions export-group">
+              <select class="btn-mini" id="pdfOrientVendasReal" title="Orientação do PDF">
+                <option value="retrato">Retrato</option>
+                <option value="paisagem">Paisagem</option>
+              </select>
+              <button class="btn-mini" id="exportVendasRealPDF">PDF</button>
+              <button class="btn-mini" id="exportVendasRealXLSX">Excel</button>
+              <button class="btn-mini" id="exportVendasReal">CSV</button>
+            </div>
+          </div>
+          <div class="widget-body">
+            <div class="table-filter-row"><input type="text" id="filtroVendasReal" placeholder="Filtrar por data, DAV, cliente, vendedor ou produto..."></div>
+            <div class="table-scroll">
+              <table id="tblVendasReal" data-tablekey="VendasReal">
+                <thead><tr><th class="chk-col"><input type="checkbox" id="selAllVendasReal" onchange="toggleSelectAll('VendasReal', this.checked)"></th><th data-sort="data">Data</th><th data-sort="dav">DAV</th><th data-sort="cliente">Cliente</th><th data-sort="vendedor">Vendedor</th><th data-sort="produto">Código</th><th data-sort="produtoNome">Produto</th><th class="num" data-sort="qtd">Qtd</th><th class="num" data-sort="precoUnit">Preço unit.</th><th class="num" data-sort="total">Total item</th></tr></thead>
                 <tbody></tbody>
               </table>
             </div>
@@ -1090,7 +1160,7 @@ const state = {
   server:'', clientId:'', clientSecret:'', basicOverride:'',
   token:null, dataInicio:'', dataFim:'',
   davs:[], financeiro:[], produtosMap:new Map(), moduleErrors:{}, empresaNome:'', empresaCnpj:'',
-  ordemServico:[], notaFornecedor:[]
+  ordemServico:[], notaFornecedor:[], filiais:[], filialSelecionada:''
 };
 const charts = {};
 
@@ -1199,6 +1269,47 @@ async function fetchAllPaginated(path, baseQuery, onProgress, maxRecords){
   return all;
 }
 
+function dateRangeDays(startISO, endISO){
+  const days = [];
+  if(!startISO || !endISO) return days;
+  let d = new Date(startISO + 'T00:00:00');
+  const end = new Date(endISO + 'T00:00:00');
+  if(isNaN(d) || isNaN(end)) return days;
+  while(d <= end){
+    days.push(d.toISOString().slice(0,10));
+    d.setDate(d.getDate()+1);
+  }
+  return days;
+}
+
+/* Alguns servidores aplicam um limite interno de "janela" de resultados por
+   consulta (independente da paginação offset/limit pedida). Pra garantir que
+   o período inteiro venha completo mesmo nesses casos, dividimos a busca em
+   pedaços de um dia cada e buscamos em paralelo (com paginação normal dentro
+   de cada dia, caso um único dia tenha mais de 100 registros). */
+async function fetchAllPaginatedByDay(path, baseQuery, dateField, dataInicio, dataFim, onProgress, maxRecordsPerDay){
+  const days = dateRangeDays(dataInicio, dataFim);
+  if(days.length === 0){
+    return fetchAllPaginated(path, baseQuery, onProgress, maxRecordsPerDay);
+  }
+  let all = [];
+  const CONCURRENCY = 4;
+  let idx = 0, doneDays = 0;
+  async function worker(){
+    while(idx < days.length){
+      const i = idx++;
+      const day = days[i];
+      const q = Object.assign({}, baseQuery, {}, { [dateField+'.ge']: day, [dateField+'.le']: day });
+      const chunk = await fetchAllPaginated(path, q, null, maxRecordsPerDay);
+      all = all.concat(chunk);
+      doneDays++;
+      if(onProgress) onProgress(all.length, doneDays, days.length);
+    }
+  }
+  await Promise.all(Array.from({length:Math.min(CONCURRENCY, days.length)}, worker));
+  return all;
+}
+
 /* ================= CARREGAMENTO ================= */
 function setLoading(on, msg){
   document.getElementById('loadingOverlay').style.display = on ? 'flex' : 'none';
@@ -1244,8 +1355,9 @@ async function fetchProdutosNomes(codigos){
 
 async function loadAllData(){
   setLoading(true, 'Autenticando…');
-  const davQuery = { 'data.ge': state.dataInicio, 'data.le': state.dataFim };
-  const finQuery = { 'vencimento.ge': state.dataInicio, 'vencimento.le': state.dataFim };
+  const davQuery = {};
+  if(state.filialSelecionada) davQuery['filial.eq'] = state.filialSelecionada;
+  const finQuery = {};
 
   await authenticate();
   state.moduleErrors = {};
@@ -1253,11 +1365,14 @@ async function loadAllData(){
   setLoading(true, 'Carregando dados da empresa…');
   state.empresaNome = '';
   state.empresaCnpj = '';
+  state.filiais = [];
   try{
-    const filiais = await apiGet('/public-api/v1/commons/filial', { offset:0, limit:5 });
+    const filiais = await apiGet('/public-api/v1/commons/filial', { offset:0, limit:100 });
     if(Array.isArray(filiais) && filiais.length){
-      state.empresaNome = filiais[0].razaosocial || '';
-      state.empresaCnpj = filiais[0].cnpj || '';
+      state.filiais = filiais;
+      const ativa = (state.filialSelecionada && filiais.find(f=>String(f.codigo)===String(state.filialSelecionada))) || filiais[0];
+      state.empresaNome = ativa.razaosocial || '';
+      state.empresaCnpj = ativa.cnpj || '';
     }
   }catch(e){
     try{
@@ -1269,11 +1384,12 @@ async function loadAllData(){
       state.moduleErrors.empresa = e.message;
     }
   }
+  populateFilialSelect();
 
   setLoading(true, 'Carregando documentos de venda (DAVs)…');
   try{
-    state.davs = await fetchAllPaginated('/public-api/v1/davs', davQuery,
-      n => setLoading(true, 'Carregando DAVs… ' + n + ' registros'));
+    state.davs = await fetchAllPaginatedByDay('/public-api/v1/davs', davQuery, 'data', state.dataInicio, state.dataFim,
+      (n,d,total) => setLoading(true, 'Carregando DAVs… ' + n + ' registros (dia ' + d + ' de ' + total + ')'));
   }catch(e){
     state.davs = [];
     state.moduleErrors.davs = e.message;
@@ -1281,8 +1397,8 @@ async function loadAllData(){
 
   setLoading(true, 'Carregando documentos financeiros…');
   try{
-    state.financeiro = await fetchAllPaginated('/public-api/v1/documento-financeiro', finQuery,
-      n => setLoading(true, 'Carregando financeiro… ' + n + ' registros'));
+    state.financeiro = await fetchAllPaginatedByDay('/public-api/v1/documento-financeiro', finQuery, 'vencimento', state.dataInicio, state.dataFim,
+      (n,d,total) => setLoading(true, 'Carregando financeiro… ' + n + ' registros (dia ' + d + ' de ' + total + ')'));
   }catch(e){
     state.financeiro = [];
     state.moduleErrors.financeiro = e.message;
@@ -1300,9 +1416,8 @@ async function loadAllData(){
 
   setLoading(true, 'Carregando ordens de serviço…');
   try{
-    state.ordemServico = await fetchAllPaginated('/public-api/v1/ordem-servico',
-      { 'dataOrdemServico.ge': state.dataInicio, 'dataOrdemServico.le': state.dataFim },
-      n => setLoading(true, 'Carregando ordens de serviço… ' + n + ' registros'));
+    state.ordemServico = await fetchAllPaginatedByDay('/public-api/v1/ordem-servico', {}, 'dataOrdemServico', state.dataInicio, state.dataFim,
+      (n,d,total) => setLoading(true, 'Carregando ordens de serviço… ' + n + ' registros (dia ' + d + ' de ' + total + ')'));
   }catch(e){
     state.ordemServico = [];
     state.moduleErrors.ordemServico = e.message;
@@ -1310,9 +1425,8 @@ async function loadAllData(){
 
   setLoading(true, 'Carregando notas fiscais de fornecedor…');
   try{
-    state.notaFornecedor = await fetchAllPaginated('/public-api/v1/item-nota-entrada',
-      { 'dataEntrada.ge': state.dataInicio, 'dataEntrada.le': state.dataFim },
-      n => setLoading(true, 'Carregando notas de fornecedor… ' + n + ' registros'));
+    state.notaFornecedor = await fetchAllPaginatedByDay('/public-api/v1/item-nota-entrada', {}, 'dataEntrada', state.dataInicio, state.dataFim,
+      (n,d,total) => setLoading(true, 'Carregando notas de fornecedor… ' + n + ' registros (dia ' + d + ' de ' + total + ')'));
   }catch(e){
     state.notaFornecedor = [];
     state.moduleErrors.notaFornecedor = e.message;
@@ -1438,8 +1552,8 @@ function statWidget(label, value, foot, cls){
 }
 
 /* ================= SELEÇÃO DE LINHAS / VISÃO FILTRADA (por tabela) ================= */
-const tableView = { Vendas:[], Fin:[], Pedidos:[], Orc:[], OS:[], NF:[] };
-const tableSelection = { Vendas:new Set(), Fin:new Set(), Pedidos:new Set(), Orc:new Set(), OS:new Set(), NF:new Set() };
+const tableView = { Vendas:[], VendasReal:[], Fin:[], Pedidos:[], Orc:[], OS:[], NF:[] };
+const tableSelection = { Vendas:new Set(), VendasReal:new Set(), Fin:new Set(), Pedidos:new Set(), Orc:new Set(), OS:new Set(), NF:new Set() };
 
 function assignIds(rows){
   rows.forEach((r,i)=>{ r._id = i; });
@@ -1459,7 +1573,7 @@ function toggleSelectAll(key, checked){
     toggleRowSelection(key, Number(b.dataset.id), checked);
   });
 }
-const COUNT_EL = { Vendas:'vendasCount', Fin:'finCount', Pedidos:'pedidosCount', Orc:'orcCount', OS:'osCount', NF:'nfCount' };
+const COUNT_EL = { Vendas:'vendasCount', VendasReal:'vendasRealCount', Fin:'finCount', Pedidos:'pedidosCount', Orc:'orcCount', OS:'osCount', NF:'nfCount' };
 function updateCountLabel(key){
   const el = document.getElementById(COUNT_EL[key]);
   if(!el) return;
@@ -1490,9 +1604,10 @@ function produtoLabel(codigo){
   return nome ? (nome + ' (' + codigo + ')') : (codigo || '—');
 }
 
-function flattenItens(){
+function flattenItens(filterFn){
   const rows = [];
   state.davs.forEach(d=>{
+    if(filterFn && !filterFn(d)) return;
     (d.itens||[]).forEach(it=>{
       rows.push({
         data:d.data, dav:d.codigo, cliente:d.nomeCliente||d.cliente||'—', vendedor:d.nomeVendedor||d.vendedor||'—',
@@ -1511,15 +1626,16 @@ function renderVendas(){
     renderVendasTable([]);
     return;
   }
-  const rows = assignIds(flattenItens().sort((a,b)=>(b.qtd||0)-(a.qtd||0)));
+  const rows = assignIds(flattenItens(d=>d.status!==4).sort((a,b)=>(b.qtd||0)-(a.qtd||0)));
   const totalItens = rows.reduce((s,r)=>s+r.total,0);
   const totalQtd = rows.reduce((s,r)=>s+(r.qtd||0),0);
-  const ticketMedio = state.davs.length ? (state.davs.reduce((s,d)=>s+(d.valor||0),0)/state.davs.length) : 0;
+  const davsNaoRealizados = state.davs.filter(d=>d.status!==4);
+  const ticketMedio = davsNaoRealizados.length ? (davsNaoRealizados.reduce((s,d)=>s+(d.valor||0),0)/davsNaoRealizados.length) : 0;
 
   document.getElementById('kpiVendas').innerHTML = [
-    statWidget('Itens vendidos', fmtNum(rows.length), fmtNum(totalQtd) + ' unidades'),
-    statWidget('Valor total dos itens', fmtMoney(totalItens)),
-    statWidget('Ticket médio por DAV', fmtMoney(ticketMedio), state.davs.length + ' documentos')
+    statWidget('Itens em aberto', fmtNum(rows.length), fmtNum(totalQtd) + ' unidades'),
+    statWidget('Valor total em aberto', fmtMoney(totalItens)),
+    statWidget('Ticket médio por DAV', fmtMoney(ticketMedio), davsNaoRealizados.length + ' documentos')
   ].join('');
 
   const porProduto = topN(groupSum(rows, r=>r.produtoLabel, r=>r.total), 10);
@@ -1540,6 +1656,59 @@ function renderVendas(){
 
   window.__vendasRowsFull = rows;
   renderVendasTable(rows);
+}
+
+/* ================= RENDER: VENDAS REALIZADAS (NOTA FISCAL GERADA) ================= */
+function renderVendasRealizadas(){
+  if(state.moduleErrors.davs){
+    document.getElementById('kpiVendasReal').innerHTML = moduleWarningWidget('Vendas realizadas indisponível', 'Não foi possível carregar documentos de venda neste servidor: ' + state.moduleErrors.davs);
+    destroyChart('vendasRealDia'); destroyChart('vendasRealVendedores');
+    renderVendasRealTable([]);
+    return;
+  }
+  const rows = assignIds(flattenItens(d=>d.status===4).sort((a,b)=>(b.qtd||0)-(a.qtd||0)));
+  const totalItens = rows.reduce((s,r)=>s+r.total,0);
+  const davsRealizados = state.davs.filter(d=>d.status===4);
+  const ticketMedio = davsRealizados.length ? (davsRealizados.reduce((s,d)=>s+(d.valor||0),0)/davsRealizados.length) : 0;
+
+  document.getElementById('kpiVendasReal').innerHTML = [
+    statWidget('Documentos faturados', fmtNum(davsRealizados.length)),
+    statWidget('Valor total faturado', fmtMoney(davsRealizados.reduce((s,d)=>s+(d.valor||0),0)), '', 'green'),
+    statWidget('Ticket médio', fmtMoney(ticketMedio)),
+    statWidget('Itens faturados', fmtNum(rows.length))
+  ].join('');
+
+  const porDia = groupSum(davsRealizados, d=>d.data, d=>d.valor);
+  const dias = [...porDia.keys()].sort();
+  destroyChart('vendasRealDia');
+  charts.vendasRealDia = new Chart(document.getElementById('chartVendasRealDia'), {
+    type:'line',
+    data:{ labels:dias.map(fmtDate), datasets:[{ label:'Valor faturado (R$)', data:dias.map(d=>porDia.get(d)), borderColor:'#63b587', backgroundColor:'rgba(99,181,135,0.18)', fill:true, tension:0.25, pointRadius:2 }] },
+    options: baseChartOptions()
+  });
+
+  const porVendedor = topN(groupSum(davsRealizados, d=>d.nomeVendedor, d=>d.valor), 10);
+  destroyChart('vendasRealVendedores');
+  charts.vendasRealVendedores = new Chart(document.getElementById('chartVendasRealVendedores'), {
+    type:'bar',
+    data:{ labels:porVendedor.map(x=>x[0]), datasets:[{ label:'Valor (R$)', data:porVendedor.map(x=>x[1]), backgroundColor:'#4f94c4' }] },
+    options: baseChartOptions({ indexAxis:'y' })
+  });
+
+  window.__vendasRealRowsFull = rows;
+  renderVendasRealTable(rows);
+}
+
+function renderVendasRealTable(rows){
+  tableView.VendasReal = rows;
+  const shown = rows.slice(0,300);
+  updateCountLabel('VendasReal');
+  document.querySelector('#tblVendasReal tbody').innerHTML = shown.map(r=>
+    '<tr data-rowkey="VendasReal-'+r._id+'" class="'+(tableSelection.VendasReal.has(r._id)?'row-selected':'')+'">'+
+    '<td class="chk-col"><input type="checkbox" class="rowchk-VendasReal" data-id="'+r._id+'" '+(tableSelection.VendasReal.has(r._id)?'checked':'')+' onchange="toggleRowSelection(\'VendasReal\', '+r._id+', this.checked)"></td>'+
+    '<td>'+fmtDate(r.data)+'</td><td>'+r.dav+'</td><td>'+esc(r.cliente)+'</td><td>'+esc(r.vendedor)+'</td>'+
+    '<td>'+esc(r.produto)+'</td><td>'+esc(r.produtoNome || r.produto)+'</td><td class="num">'+fmtNum(r.qtd)+'</td><td class="num">'+fmtMoney(r.precoUnit)+'</td><td class="num">'+fmtMoney(r.total)+'</td></tr>'
+  ).join('') || '<tr><td colspan="10" class="empty-note">Nenhuma venda faturada encontrada.</td></tr>';
 }
 
 function renderVendasTable(rows){
@@ -1809,6 +1978,7 @@ function renderAll(){
   Object.keys(tableSelection).forEach(k=>tableSelection[k].clear());
   renderOverview();
   renderVendas();
+  renderVendasRealizadas();
   renderFinanceiro();
   renderDocList(4,'Pedidos');
   renderDocList(2,'Orcamentos');
@@ -1822,7 +1992,7 @@ function renderAll(){
    normalmente indica módulo não licenciado/contratado pelo cliente, não um erro real.
    "Visão geral" nunca é escondida (ela já se adapta ao que está disponível). */
 const MODULE_TO_VIEWS = {
-  davs: ['vendas','pedidos','orcamentos'],
+  davs: ['vendas','vendasRealizadas','pedidos','orcamentos'],
   financeiro: ['financeiro'],
   ordemServico: ['ordemServico'],
   notaFornecedor: ['notaFornecedor']
@@ -1869,6 +2039,12 @@ document.getElementById('exportVendas').addEventListener('click', ()=>{
     r=>[fmtDate(r.data),r.dav,r.cliente,r.vendedor,r.produto,r.produtoNome||'',r.qtd,r.precoUnit,r.total]);
   downloadCSV(csv, 'vendas_detalhadas' + exportSuffix('Vendas', (window.__vendasRowsFull||[]).length) + '.csv');
 });
+document.getElementById('exportVendasReal').addEventListener('click', ()=>{
+  const rows = getExportRows('VendasReal');
+  const csv = toCSV(rows, ['Data','DAV','Cliente','Vendedor','CodigoProduto','NomeProduto','Quantidade','PrecoUnitario','Total'],
+    r=>[fmtDate(r.data),r.dav,r.cliente,r.vendedor,r.produto,r.produtoNome||'',r.qtd,r.precoUnit,r.total]);
+  downloadCSV(csv, 'vendas_realizadas' + exportSuffix('VendasReal', (window.__vendasRealRowsFull||[]).length) + '.csv');
+});
 document.getElementById('exportFin').addEventListener('click', ()=>{
   const rows = getExportRows('Fin');
   const csv = toCSV(rows, ['Documento','Entidade','Tipo','Emissao','Vencimento','Valor','Saldo','Status'],
@@ -1909,6 +2085,9 @@ const NF_HEADERS = ['Data entrada','Nota','Modelo','Fornecedor','Produto','Total
 
 function buildVendasRowsRaw(){
   return getExportRows('Vendas').map(r=>[fmtDate(r.data), r.dav, r.cliente, r.vendedor, r.produto, r.produtoNome || r.produto, r.qtd||0, r.precoUnit||0, r.total||0]);
+}
+function buildVendasRealRowsRaw(){
+  return getExportRows('VendasReal').map(r=>[fmtDate(r.data), r.dav, r.cliente, r.vendedor, r.produto, r.produtoNome || r.produto, r.qtd||0, r.precoUnit||0, r.total||0]);
 }
 function buildFinRowsRaw(){
   return getExportRows('Fin').map(f=>[
@@ -2024,7 +2203,8 @@ function wireTableExport(prefix, headers, buildRowsFn, moneyCols, numCols, filen
   });
 }
 
-wireTableExport('Vendas', VENDAS_HEADERS, buildVendasRowsRaw, [7,8], [6], 'vendas_detalhadas', 'Vendas detalhadas', ()=>(window.__vendasRowsFull||[]).length);
+wireTableExport('Vendas', VENDAS_HEADERS, buildVendasRowsRaw, [7,8], [6], 'vendas_detalhadas', 'Vendas não realizadas', ()=>(window.__vendasRowsFull||[]).length);
+wireTableExport('VendasReal', VENDAS_HEADERS, buildVendasRealRowsRaw, [7,8], [6], 'vendas_realizadas', 'Vendas realizadas', ()=>(window.__vendasRealRowsFull||[]).length);
 wireTableExport('Fin', FIN_HEADERS, buildFinRowsRaw, [5,6], [], 'financeiro', 'Documentos financeiros', ()=>state.financeiro.length);
 wireTableExport('Pedidos', DOC_HEADERS, ()=>buildDocRowsRaw(getExportRows('Pedidos')), [4], [], 'pedidos_de_venda', 'Pedidos de venda', ()=>(window.__pedidosRowsFull||[]).length);
 wireTableExport('Orc', DOC_HEADERS, ()=>buildDocRowsRaw(getExportRows('Orc')), [4], [], 'orcamentos', 'Orçamentos', ()=>(window.__orcRowsFull||[]).length);
@@ -2046,6 +2226,10 @@ function wireTableFilter(inputId, getFullRows, matchFields, renderFn, extraArg){
 wireTableFilter('filtroVendas', ()=>window.__vendasRowsFull||[], [
   r=>r.data, r=>r.dav, r=>r.cliente, r=>r.vendedor, r=>r.produtoLabel
 ], renderVendasTable);
+
+wireTableFilter('filtroVendasReal', ()=>window.__vendasRealRowsFull||[], [
+  r=>r.data, r=>r.dav, r=>r.cliente, r=>r.vendedor, r=>r.produtoLabel
+], renderVendasRealTable);
 
 wireTableFilter('filtroFin', ()=>window.__finRowsFull||[], [
   r=>r.documento, r=>r.id, r=>r.nomeEntidade, r=>r.descricaoTipoDocumentoFinanceiro||r.tipo, r=>STATUS_FIN[r.status]||r.status
@@ -2101,9 +2285,11 @@ const SORT_ACCESSORS = {
   }
 };
 SORT_ACCESSORS.Orc = SORT_ACCESSORS.Pedidos;
+SORT_ACCESSORS.VendasReal = SORT_ACCESSORS.Vendas;
 
 const RENDER_TABLE_FN = {
   Vendas: rows=>renderVendasTable(rows),
+  VendasReal: rows=>renderVendasRealTable(rows),
   Fin: rows=>renderFinTable(rows),
   Pedidos: rows=>renderDocTable(rows,4),
   Orc: rows=>renderDocTable(rows,2),
@@ -2161,6 +2347,9 @@ wireSortableHeaders();
 function buildVendasRowsFullRaw(){
   return (window.__vendasRowsFull || []).map(r=>[fmtDate(r.data), r.dav, r.cliente, r.vendedor, r.produto, r.produtoNome || r.produto, r.qtd||0, r.precoUnit||0, r.total||0]);
 }
+function buildVendasRealRowsFullRaw(){
+  return (window.__vendasRealRowsFull || []).map(r=>[fmtDate(r.data), r.dav, r.cliente, r.vendedor, r.produto, r.produtoNome || r.produto, r.qtd||0, r.precoUnit||0, r.total||0]);
+}
 function buildFinRowsFullRaw(){
   return state.financeiro.map(f=>[
     f.documento||f.id, f.nomeEntidade||'', f.descricaoTipoDocumentoFinanceiro||f.tipo||'',
@@ -2171,7 +2360,8 @@ function buildFinRowsFullRaw(){
 document.getElementById('btnExportXLSXCompleto').addEventListener('click', ()=>{
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['Indicador','Valor'], ...buildResumoRows()]), 'Resumo');
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([VENDAS_HEADERS, ...buildVendasRowsFullRaw()]), 'Vendas');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([VENDAS_HEADERS, ...buildVendasRowsFullRaw()]), 'VendasNaoRealizadas');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([VENDAS_HEADERS, ...buildVendasRealRowsFullRaw()]), 'VendasRealizadas');
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([FIN_HEADERS, ...buildFinRowsFullRaw()]), 'Financeiro');
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([DOC_HEADERS, ...buildDocRowsRaw(window.__pedidosRowsFull||[])]), 'Pedidos');
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([DOC_HEADERS, ...buildDocRowsRaw(window.__orcRowsFull||[])]), 'Orcamentos');
@@ -2204,7 +2394,8 @@ document.getElementById('btnExportPDFCompleto').addEventListener('click', ()=>{
     y = doc.lastAutoTable.finalY + 26;
   }
 
-  section('Vendas detalhadas (itens)', VENDAS_HEADERS, buildVendasRowsFullRaw(), [7,8], [6]);
+  section('Vendas não realizadas (itens)', VENDAS_HEADERS, buildVendasRowsFullRaw(), [7,8], [6]);
+  section('Vendas realizadas (itens)', VENDAS_HEADERS, buildVendasRealRowsFullRaw(), [7,8], [6]);
   section('Financeiro', FIN_HEADERS, buildFinRowsFullRaw(), [5,6], []);
   section('Pedidos de venda', DOC_HEADERS, buildDocRowsRaw(window.__pedidosRowsFull||[]), [4], []);
   section('Orçamentos', DOC_HEADERS, buildDocRowsRaw(window.__orcRowsFull||[]), [4], []);
@@ -2351,7 +2542,30 @@ document.getElementById('btnReload').addEventListener('click', async ()=>{
     await loadAllData();
     renderAll();
     wireWidgetActions();
+    wireSortableHeaders();
     saveCreds();
+  }catch(e){
+    setLoading(false);
+    alert(e.message);
+  }
+});
+
+function populateFilialSelect(){
+  const sel = document.getElementById('filialSelect');
+  if(!sel) return;
+  const wanted = state.filialSelecionada || '';
+  sel.innerHTML = '<option value="">Todas as filiais</option>' +
+    (state.filiais||[]).map(f=>'<option value="'+esc(f.codigo)+'">'+esc(f.razaosocial || ('Filial ' + f.codigo))+'</option>').join('');
+  sel.value = wanted;
+}
+
+document.getElementById('filialSelect').addEventListener('change', async ()=>{
+  state.filialSelecionada = document.getElementById('filialSelect').value;
+  try{
+    await loadAllData();
+    renderAll();
+    wireWidgetActions();
+    wireSortableHeaders();
   }catch(e){
     setLoading(false);
     alert(e.message);
