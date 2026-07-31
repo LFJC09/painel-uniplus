@@ -1336,7 +1336,7 @@ async function fetchAllPaginatedByDay(path, baseQuery, dateField, dataInicio, da
     return fetchAllPaginated(path, baseQuery, onProgress, maxRecordsPerDay);
   }
   let all = [];
-  const CONCURRENCY = 4;
+  const CONCURRENCY = 8;
   let idx = 0, doneDays = 0;
   async function worker(){
     while(idx < days.length){
@@ -1398,9 +1398,9 @@ async function fetchProdutosNomes(codigos){
 
 async function loadAllData(){
   setLoading(true, 'Autenticando…');
-  const davQuery = {};
+  const davQuery = { 'data.ge': state.dataInicio, 'data.le': state.dataFim };
   if(state.filialSelecionada) davQuery['filial.eq'] = state.filialSelecionada;
-  const finQuery = {};
+  const finQuery = { 'vencimento.ge': state.dataInicio, 'vencimento.le': state.dataFim };
   const modVis = state.modulosVisiveis || {};
   const wantFin = modVis.financeiro !== false;
   const wantOS = modVis.ordemServico !== false;
@@ -1436,8 +1436,8 @@ async function loadAllData(){
 
   setLoading(true, 'Carregando documentos de venda (DAVs)…');
   try{
-    state.davs = await fetchAllPaginatedByDay('/public-api/v1/davs', davQuery, 'data', state.dataInicio, state.dataFim,
-      (n,d,total) => setLoading(true, 'Carregando DAVs… ' + n + ' registros (dia ' + d + ' de ' + total + ')'));
+    state.davs = await fetchAllPaginated('/public-api/v1/davs', davQuery,
+      n => setLoading(true, 'Carregando DAVs… ' + n + ' registros'));
   }catch(e){
     state.davs = [];
     state.moduleErrors.davs = e.message;
@@ -1446,8 +1446,8 @@ async function loadAllData(){
   if(wantFin){
     setLoading(true, 'Carregando documentos financeiros…');
     try{
-      state.financeiro = await fetchAllPaginatedByDay('/public-api/v1/documento-financeiro', finQuery, 'vencimento', state.dataInicio, state.dataFim,
-        (n,d,total) => setLoading(true, 'Carregando financeiro… ' + n + ' registros (dia ' + d + ' de ' + total + ')'));
+      state.financeiro = await fetchAllPaginated('/public-api/v1/documento-financeiro', finQuery,
+        n => setLoading(true, 'Carregando financeiro… ' + n + ' registros'));
     }catch(e){
       state.financeiro = [];
       state.moduleErrors.financeiro = e.message;
@@ -1473,8 +1473,9 @@ async function loadAllData(){
   if(wantOS){
     setLoading(true, 'Carregando ordens de serviço…');
     try{
-      state.ordemServico = await fetchAllPaginatedByDay('/public-api/v1/ordem-servico', {}, 'dataOrdemServico', state.dataInicio, state.dataFim,
-        (n,d,total) => setLoading(true, 'Carregando ordens de serviço… ' + n + ' registros (dia ' + d + ' de ' + total + ')'));
+      state.ordemServico = await fetchAllPaginated('/public-api/v1/ordem-servico',
+        { 'dataOrdemServico.ge': state.dataInicio, 'dataOrdemServico.le': state.dataFim },
+        n => setLoading(true, 'Carregando ordens de serviço… ' + n + ' registros'));
     }catch(e){
       state.ordemServico = [];
       state.moduleErrors.ordemServico = e.message;
@@ -1486,8 +1487,9 @@ async function loadAllData(){
   if(wantNF){
     setLoading(true, 'Carregando notas fiscais de fornecedor…');
     try{
-      state.notaFornecedor = await fetchAllPaginatedByDay('/public-api/v1/item-nota-entrada', {}, 'dataEntrada', state.dataInicio, state.dataFim,
-        (n,d,total) => setLoading(true, 'Carregando notas de fornecedor… ' + n + ' registros (dia ' + d + ' de ' + total + ')'));
+      state.notaFornecedor = await fetchAllPaginated('/public-api/v1/item-nota-entrada',
+        { 'dataEntrada.ge': state.dataInicio, 'dataEntrada.le': state.dataFim },
+        n => setLoading(true, 'Carregando notas de fornecedor… ' + n + ' registros'));
     }catch(e){
       state.notaFornecedor = [];
       state.moduleErrors.notaFornecedor = e.message;
