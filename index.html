@@ -609,7 +609,7 @@
       </a>
     </div>
     <div class="actions">
-      <select class="tbtn" id="filialSelect" title="Filial" style="min-width:160px;">
+      <select class="tbtn" id="filialSelect" title="Filial" style="min-width:160px;max-width:340px;">
         <option value="">Todas as filiais</option>
       </select>
       <button class="tbtn" id="btnLogout">Trocar conta</button>
@@ -740,7 +740,7 @@
         </div>
         <div class="widget">
           <div class="widget-head">
-            <div class="widget-titles"><h2>Itens vendidos</h2><span class="wsub" id="vendasCount"></span></div>
+            <div class="widget-titles"><h2>Itens em aberto (não faturados)</h2><span class="wsub" id="vendasCount"></span></div>
             <div class="widget-actions export-group">
               <select class="btn-mini" id="pdfOrientVendas" title="Orientação do PDF">
                 <option value="paisagem" selected>Paisagem</option>
@@ -2751,7 +2751,12 @@ function populateFilialSelect(){
   if(!sel) return;
   const wanted = state.filialSelecionada || '';
   sel.innerHTML = '<option value="">Todas as filiais</option>' +
-    (state.filiais||[]).map(f=>'<option value="'+esc(f.codigo)+'">'+esc(f.razaosocial || ('Filial ' + f.codigo))+'</option>').join('');
+    (state.filiais||[]).map(f=>{
+      const nome = f.razaosocial || ('Filial ' + f.codigo);
+      const cnpjTxt = f.cnpj ? (' — CNPJ: ' + fmtCnpj(f.cnpj)) : '';
+      const label = 'Filial ' + f.codigo + ' — ' + nome + cnpjTxt;
+      return '<option value="'+esc(f.codigo)+'">'+esc(label)+'</option>';
+    }).join('');
   sel.value = wanted;
 }
 
