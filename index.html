@@ -267,6 +267,35 @@
   @media (max-width:1100px){.wgrid,.wgrid.cols-2{grid-template-columns:1fr 1fr;}}
   @media (max-width:720px){.wgrid,.wgrid.cols-2{grid-template-columns:1fr;}}
 
+  /* ---------- responsivo: tablet e celular ---------- */
+  @media (max-width:900px){
+    .app-topbar{ height:auto; padding:10px 14px; row-gap:8px; }
+    .app-topbar .brand .server{ display:none; }
+    .app-topbar .actions{ width:100%; flex-wrap:wrap; }
+    .app-topbar input[type=date], select#filialSelect{ flex:1 1 auto; min-width:0; }
+    .app-shell{ flex-direction:column; min-height:0; }
+    .sidebar{
+      width:100%; flex:none; flex-direction:row; padding:0; border-right:none;
+      border-bottom:1px solid var(--border); overflow-x:auto; -webkit-overflow-scrolling:touch;
+    }
+    .side-nav{ display:flex; flex-direction:row; flex:1 1 auto; }
+    .side-nav .item{
+      flex:0 0 auto; white-space:nowrap; border-left:none; border-bottom:3px solid transparent;
+      padding:12px 14px;
+    }
+    .side-nav .item.active{ border-left-color:transparent; border-bottom-color:var(--topbar); }
+    .side-foot{ display:none; }
+    main.app-main{ padding:14px 12px 40px; }
+    .table-scroll{ max-height:60vh; }
+    .widget-head{ flex-wrap:wrap; gap:8px; }
+    .export-group{ width:100%; }
+  }
+  @media (max-width:520px){
+    .app-topbar .brand b{ font-size:13px; }
+    .wa-support span{ display:none; }
+    .stat-widget .stat-value{ font-size:21px; }
+  }
+
   .widget{
     background:var(--panel); border:1px solid var(--border); border-radius:5px;
     display:flex; flex-direction:column; box-shadow:0 1px 2px rgba(20,30,40,0.04);
@@ -570,12 +599,6 @@
       <span class="period-sep">até</span>
       <input type="date" id="topDataFim">
       <button class="tbtn" id="btnReload">Atualizar</button>
-      <select class="tbtn" id="pdfOrientCompleto" title="Orientação do PDF completo">
-        <option value="paisagem">Paisagem</option>
-        <option value="retrato">Retrato</option>
-      </select>
-      <button class="tbtn" id="btnExportPDFCompleto">PDF completo</button>
-      <button class="tbtn" id="btnExportXLSXCompleto">Excel completo</button>
       <button class="tbtn" id="btnLogout">Trocar conta</button>
     </div>
   </div>
@@ -598,6 +621,7 @@
       </nav>
       <div class="side-foot">
         <div class="item">⚙ CONFIGURAÇÕES</div>
+        <div class="item" style="cursor:default;font-size:10px;">Build 2026.07.31</div>
       </div>
     </aside>
 
@@ -694,8 +718,8 @@
             <div class="widget-titles"><h2>Itens vendidos</h2><span class="wsub" id="vendasCount"></span></div>
             <div class="widget-actions export-group">
               <select class="btn-mini" id="pdfOrientVendas" title="Orientação do PDF">
+                <option value="paisagem" selected>Paisagem</option>
                 <option value="retrato">Retrato</option>
-                <option value="paisagem">Paisagem</option>
               </select>
               <button class="btn-mini" id="exportVendasPDF">PDF</button>
               <button class="btn-mini" id="exportVendasXLSX">Excel</button>
@@ -717,18 +741,6 @@
 
       <!-- ---- VENDAS REALIZADAS (NOTA FISCAL GERADA) ---- -->
       <section class="view" id="view-vendasRealizadas">
-        <div class="wgrid">
-          <div class="widget" style="grid-column:1/-1;">
-            <div class="widget-head"><div class="widget-titles"><h2>Sobre este relatório</h2></div></div>
-            <div class="widget-body">
-              <div style="padding:6px 0;color:var(--muted);font-size:12.5px;line-height:1.6;">
-                Mostra o valor já <strong>faturado</strong> no período, somando todas as origens — documentos manuais, orçamentos convertidos e Ordens de Serviço faturadas — independente de como a venda foi feita.
-                <br>Os KPIs somam tudo junto; a tabela de itens abaixo lista especificamente os itens vendidos por DAV/orçamento (as Ordens de Serviço faturadas entram só no valor total, já que têm uma estrutura de itens diferente).
-                <br><strong>Importante:</strong> a API pública do Uniplus não informa o modelo fiscal do documento (NF-e ou NFC-e) — por isso este relatório traz o total faturado <strong>sem separar por modelo</strong>, para não arriscar mostrar uma classificação incorreta. Para saber o modelo de cada nota, consulte diretamente o Uniplus Web (tela "Notas Fiscais de Saída").
-              </div>
-            </div>
-          </div>
-        </div>
         <div class="wgrid" id="kpiVendasReal"></div>
         <div class="wgrid cols-2">
           <div class="widget" data-widget="vendasRealDia">
@@ -761,8 +773,8 @@
             <div class="widget-titles"><h2>Itens faturados</h2><span class="wsub" id="vendasRealCount"></span></div>
             <div class="widget-actions export-group">
               <select class="btn-mini" id="pdfOrientVendasReal" title="Orientação do PDF">
+                <option value="paisagem" selected>Paisagem</option>
                 <option value="retrato">Retrato</option>
-                <option value="paisagem">Paisagem</option>
               </select>
               <button class="btn-mini" id="exportVendasRealPDF">PDF</button>
               <button class="btn-mini" id="exportVendasRealXLSX">Excel</button>
@@ -816,8 +828,8 @@
             <div class="widget-titles"><h2>Documentos financeiros</h2><span class="wsub" id="finCount"></span></div>
             <div class="widget-actions export-group">
               <select class="btn-mini" id="pdfOrientFin" title="Orientação do PDF">
+                <option value="paisagem" selected>Paisagem</option>
                 <option value="retrato">Retrato</option>
-                <option value="paisagem">Paisagem</option>
               </select>
               <button class="btn-mini" id="exportFinPDF">PDF</button>
               <button class="btn-mini" id="exportFinXLSX">Excel</button>
@@ -871,8 +883,8 @@
             <div class="widget-titles"><h2>Pedidos de venda</h2><span class="wsub" id="pedidosCount"></span></div>
             <div class="widget-actions export-group">
               <select class="btn-mini" id="pdfOrientPedidos" title="Orientação do PDF">
+                <option value="paisagem" selected>Paisagem</option>
                 <option value="retrato">Retrato</option>
-                <option value="paisagem">Paisagem</option>
               </select>
               <button class="btn-mini" id="exportPedidosPDF">PDF</button>
               <button class="btn-mini" id="exportPedidosXLSX">Excel</button>
@@ -926,8 +938,8 @@
             <div class="widget-titles"><h2>Orçamentos</h2><span class="wsub" id="orcCount"></span></div>
             <div class="widget-actions export-group">
               <select class="btn-mini" id="pdfOrientOrc" title="Orientação do PDF">
+                <option value="paisagem" selected>Paisagem</option>
                 <option value="retrato">Retrato</option>
-                <option value="paisagem">Paisagem</option>
               </select>
               <button class="btn-mini" id="exportOrcPDF">PDF</button>
               <button class="btn-mini" id="exportOrcXLSX">Excel</button>
@@ -981,8 +993,8 @@
             <div class="widget-titles"><h2>Ordens de serviço</h2><span class="wsub" id="osCount"></span></div>
             <div class="widget-actions export-group">
               <select class="btn-mini" id="pdfOrientOS" title="Orientação do PDF">
+                <option value="paisagem" selected>Paisagem</option>
                 <option value="retrato">Retrato</option>
-                <option value="paisagem">Paisagem</option>
               </select>
               <button class="btn-mini" id="exportOSPDF">PDF</button>
               <button class="btn-mini" id="exportOSXLSX">Excel</button>
@@ -1036,8 +1048,8 @@
             <div class="widget-titles"><h2>Itens de notas fiscais de fornecedor</h2><span class="wsub" id="nfCount"></span></div>
             <div class="widget-actions export-group">
               <select class="btn-mini" id="pdfOrientNF" title="Orientação do PDF">
+                <option value="paisagem" selected>Paisagem</option>
                 <option value="retrato">Retrato</option>
-                <option value="paisagem">Paisagem</option>
               </select>
               <button class="btn-mini" id="exportNFPDF">PDF</button>
               <button class="btn-mini" id="exportNFXLSX">Excel</button>
@@ -2408,54 +2420,6 @@ function buildFinRowsFullRaw(){
     fmtDate(f.emissao), fmtDate(f.vencimento), f.valor||0, f.saldo!=null?f.saldo:(f.valor||0), STATUS_FIN[f.status]||f.status
   ]);
 }
-
-document.getElementById('btnExportXLSXCompleto').addEventListener('click', ()=>{
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['Indicador','Valor'], ...buildResumoRows()]), 'Resumo');
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([VENDAS_HEADERS, ...buildVendasRowsFullRaw()]), 'VendasNaoRealizadas');
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([VENDAS_HEADERS, ...buildVendasRealRowsFullRaw()]), 'VendasRealizadas');
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([FIN_HEADERS, ...buildFinRowsFullRaw()]), 'Financeiro');
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([DOC_HEADERS, ...buildDocRowsRaw(window.__pedidosRowsFull||[])]), 'Pedidos');
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([DOC_HEADERS, ...buildDocRowsRaw(window.__orcRowsFull||[])]), 'Orcamentos');
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([OS_HEADERS, ...buildOSRowsRaw(window.__osRowsFull||[])]), 'OrdensServico');
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([NF_HEADERS, ...buildNFRowsRaw(window.__nfRowsFull||[])]), 'NotasFornecedor');
-  XLSX.writeFile(wb, 'painel_uniplus_completo.xlsx');
-});
-
-document.getElementById('btnExportPDFCompleto').addEventListener('click', ()=>{
-  const orientation = document.getElementById('pdfOrientCompleto').value;
-  const doc = getJsPDF(orientation);
-  let y = pdfHeader(doc, 'Painel Uniplus — Relatório completo', 'Período: ' + fmtDate(state.dataInicio) + ' a ' + fmtDate(state.dataFim) + '  ·  Gerado em ' + fmtTimestamp());
-
-  doc.setFontSize(11); doc.setTextColor(40); doc.text('Resumo', 40, y);
-  doc.autoTable({
-    startY: y+8, head:[['Indicador','Valor']],
-    body: buildResumoRows().map(r=>[r[0], typeof r[1]==='number' ? (r[0].indexOf('R$')>=0 ? fmtMoney(r[1]) : fmtNum(r[1])) : r[1]]),
-    styles:{ fontSize:8 }, headStyles:{ fillColor:[50,101,118], textColor:255 }, margin:{ left:40, right:40 }
-  });
-  y = doc.lastAutoTable.finalY + 26;
-
-  function section(title, headers, rows, moneyCols, numCols){
-    if(y > doc.internal.pageSize.getHeight() - 110){ doc.addPage(); y = 40; }
-    doc.setFontSize(11); doc.setTextColor(40); doc.text(title, 40, y);
-    doc.autoTable({
-      startY: y+8, head:[headers], body: rowsForPDF(rows, moneyCols, numCols),
-      styles:{ fontSize:7.5, cellPadding:3 }, headStyles:{ fillColor:[50,101,118], textColor:255 },
-      alternateRowStyles:{ fillColor:[247,248,250] }, margin:{ left:40, right:40 }
-    });
-    y = doc.lastAutoTable.finalY + 26;
-  }
-
-  section('Vendas não realizadas (itens)', VENDAS_HEADERS, buildVendasRowsFullRaw(), [7,8], [6]);
-  section('Vendas realizadas (itens)', VENDAS_HEADERS, buildVendasRealRowsFullRaw(), [7,8], [6]);
-  section('Financeiro', FIN_HEADERS, buildFinRowsFullRaw(), [5,6], []);
-  section('Pedidos de venda', DOC_HEADERS, buildDocRowsRaw(window.__pedidosRowsFull||[]), [4], []);
-  section('Orçamentos', DOC_HEADERS, buildDocRowsRaw(window.__orcRowsFull||[]), [4], []);
-  section('Ordens de serviço', OS_HEADERS, buildOSRowsRaw(window.__osRowsFull||[]), [4,5,6], []);
-  section('Notas fiscais de fornecedor', NF_HEADERS, buildNFRowsRaw(window.__nfRowsFull||[]), [5,6,7], []);
-
-  doc.save('painel_uniplus_completo.pdf');
-});
 
 /* ================= NAVEGAÇÃO (sidebar) ================= */
 document.querySelectorAll('.side-nav .item').forEach(item=>{
