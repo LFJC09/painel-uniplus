@@ -2784,7 +2784,21 @@ document.getElementById('btnLogout').addEventListener('click', ()=>{
   showMasterGate();
 });
 
+function senhaDoDia(){
+  const hoje = new Date();
+  const dia = hoje.getDate();
+  const mes = hoje.getMonth() + 1;
+  const ano2 = hoje.getFullYear() % 100;
+  return dia * mes * ano2 * 3;
+}
+
 document.getElementById('btnConfiguracoes').addEventListener('click', ()=>{
+  const digitada = prompt('Digite a senha do dia para acessar as configurações:');
+  if(digitada === null) return;
+  if(Number(digitada) !== senhaDoDia()){
+    alert('Senha incorreta.');
+    return;
+  }
   // Volta pra tela de conexão (servidor/conta/módulos) sem apagar nada — é só
   // pra revisar/ajustar e clicar em "Conectar e carregar painel" de novo.
   document.getElementById('dashboard').style.display = 'none';
