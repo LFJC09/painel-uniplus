@@ -635,7 +635,7 @@
       </nav>
       <div class="side-foot">
         <div class="item" id="btnConfiguracoes">⚙ CONFIGURAÇÕES</div>
-        <div class="item" style="cursor:default;font-size:10px;">Build 3.1</div>
+        <div class="item" style="cursor:default;font-size:10px;">Build 3.3</div>
       </div>
     </aside>
 
@@ -1212,6 +1212,12 @@ let PROXY_BASE = 'http://localhost:8787';
    ou não) fica registrado localmente. */
 const MASTER_CLIENT_ID = 'unipluswebclient';
 const MASTER_CLIENT_SECRET = 'fbac505d-6866-44b2-b976-9afed1e17f94';
+const ALLOWED_TECH_EMAILS = [
+  'lfjcsuporte@hotmail.com','lfjcsuporte01@hotmail.com','lfjcsuporte02@hotmail.com',
+  'lfjcsuporte03@hotmail.com','lfjcsuporte04@hotmail.com','lfjcsuporte05@hotmail.com',
+  'lfjcsuporte06@hotmail.com','lfjcsuporte07@hotmail.com','lfjcsuporte08@hotmail.com',
+  'lfjcsuporte09@hotmail.com','lfjcsuporte10@hotmail.com'
+];
 const DEFAULT_TENANT = 'lfteste';
 const MASTER_KEY = 'uniplusMasterGate_v1';
 const MASTER_INFO_KEY = 'uniplusMasterInfo_v1';
@@ -1294,6 +1300,10 @@ document.getElementById('btnMasterLogin').addEventListener('click', async ()=>{
     const data = await resp.json();
     if(!data.access_token) throw new Error('Resposta de login sem access_token — algo mudou no servidor.');
 
+    if(!ALLOWED_TECH_EMAILS.includes(username.trim().toLowerCase())){
+      throw new Error('Este usuário tem senha válida no Uniplus, mas não está autorizado a acessar este painel.');
+    }
+
     setMasterAuthed(true);
     saveMasterInfo({ server, proxy, tenant, username });
     document.getElementById('mgPass').value = '';
@@ -1328,7 +1338,7 @@ const state = {
   davs:[], financeiro:[], produtosMap:new Map(), moduleErrors:{}, empresaNome:'', empresaCnpj:'',
   modulosVisiveis:{},
   ordemServico:[], notaFornecedor:[], filiais:[], filialSelecionada:'',
-  vendaRealizada:[], vendaRealizadaOS:[], producaoRegistros:[], davsProducaoComparacao:[]
+  vendaRealizada:[], vendaRealizadaOS:[], vendaRealizadaDavs:[], producaoRegistros:[], davsProducaoComparacao:[]
 };
 const charts = {};
 
@@ -1670,6 +1680,10 @@ async function loadTab(key, forceReload){
       catch(e){ entry.venda = []; entry.error = e.message; }
       try{ entry.ordemServico = await fetchOSFor(ini, fim); }
       catch(e){ entry.ordemServico = []; /* OS é só um complemento aqui, não trava a aba se falhar */ }
+      try{
+        const davsPeriodo = await fetchDavsFor(ini, fim, 'Carregando DAVs faturados (complemento)');
+        entry.davsFaturados = davsPeriodo.filter(d=>d.status===4);
+      }catch(e){ entry.davsFaturados = []; /* complemento — não trava a aba se falhar */ }
     } else if(kind === 'notaFornecedor'){
       try{ entry.notaFornecedor = await fetchNFFor(ini, fim); }
       catch(e){ entry.notaFornecedor = []; entry.error = e.message; }
@@ -1721,6 +1735,7 @@ function renderTabFromCache(key){
   if(kind === 'venda'){
     state.vendaRealizada = entry.venda || [];
     state.vendaRealizadaOS = entry.ordemServico || [];
+    state.vendaRealizadaDavs = entry.davsFaturados || [];
     state.moduleErrors.venda = entry.error || null;
   }
   if(kind === 'notaFornecedor'){
@@ -1994,13 +2009,20 @@ function renderVendasRealizadas(){
 
   const ticketMedio = vendas.length ? (totalGeral/vendas.length) : 0;
 
-  document.getElementById('kpiVendasReal').innerHTML = [
+  const davsFaturados = state.vendaRealizadaDavs || [];
+  const valorDavsFaturados = davsFaturados.reduce((s,d)=>s+(d.valor||0),0);
+
+  const kpis = [
     statWidget('Valor total realizado', fmtMoney(totalGeral + valorOS), 'vendas + Ordem de Serviço, qualquer origem', 'green'),
     statWidget('NF-e (sem PDV)', fmtMoney(valorNFe), nfe.length + ' documentos'),
     statWidget('NFC-e (via PDV)', fmtMoney(valorNFCe), nfce.length + ' documentos', 'blue'),
     statWidget('Faturado por Ordem de Serviço', fmtMoney(valorOS), osFaturadas.length + ' ordens'),
     statWidget('Ticket médio', fmtMoney(ticketMedio), vendas.length + ' vendas')
-  ].join('');
+  ];
+  if(totalGeral === 0 && vendas.length === 0){
+    kpis.push(statWidget('Faturado via DAV (complemento)', fmtMoney(valorDavsFaturados), davsFaturados.length + ' documentos com nota fiscal gerada — some se "vendas" acima estiver vazio (comum em contas de fabricante/produção)', 'blue'));
+  }
+  document.getElementById('kpiVendasReal').innerHTML = kpis.join('');
 
   const porDia = groupSum(vendas, v=>v.emissao, v=>v.valorTotal);
   const dias = [...porDia.keys()].sort();
