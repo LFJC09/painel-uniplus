@@ -631,10 +631,11 @@
         <div class="item" data-view="orcamentos"><span class="ic"></span>ORÇAMENTOS</div>
         <div class="item" data-view="ordemServico"><span class="ic"></span>ORDENS DE SERVIÇO</div>
         <div class="item" data-view="notaFornecedor"><span class="ic"></span>NOTAS DE FORNECEDOR</div>
+        <div class="item" data-view="producao"><span class="ic"></span>PRODUÇÃO</div>
       </nav>
       <div class="side-foot">
         <div class="item" id="btnConfiguracoes">⚙ CONFIGURAÇÕES</div>
-        <div class="item" style="cursor:default;font-size:10px;">Build 2.1</div>
+        <div class="item" style="cursor:default;font-size:10px;">Build 3.1</div>
       </div>
     </aside>
 
@@ -786,9 +787,9 @@
             <div class="widget-body"><div class="chart-wrap"><canvas id="chartVendasRealDia"></canvas></div></div>
             <div class="widget-foot"><span>&nbsp;</span><span class="ts" data-ts>—</span></div>
           </div>
-          <div class="widget" data-widget="vendasRealVendedores">
+          <div class="widget" data-widget="vendasRealTipo">
             <div class="widget-head">
-              <div class="widget-titles"><h2>Top 10 vendedores</h2><span class="wsub">Vendas realizadas no período</span></div>
+              <div class="widget-titles"><h2>NF-e × NFC-e</h2><span class="wsub">Composição do valor faturado (por PDV ou não)</span></div>
               <div class="widget-actions">
                 <button class="wicon" data-action="refresh" title="Atualizar">⟳</button>
                 <button class="wicon" data-action="expand" title="Expandir">⤢</button>
@@ -801,7 +802,7 @@
         </div>
         <div class="widget">
           <div class="widget-head">
-            <div class="widget-titles"><h2>Itens faturados</h2><span class="wsub" id="vendasRealCount"></span></div>
+            <div class="widget-titles"><h2>Vendas faturadas</h2><span class="wsub" id="vendasRealCount"></span></div>
             <div class="widget-actions export-group">
               <select class="btn-mini" id="pdfOrientVendasReal" title="Orientação do PDF">
                 <option value="paisagem" selected>Paisagem</option>
@@ -813,10 +814,10 @@
             </div>
           </div>
           <div class="widget-body">
-            <div class="table-filter-row"><input type="text" id="filtroVendasReal" placeholder="Filtrar por data, DAV, cliente, vendedor ou produto..."></div>
+            <div class="table-filter-row"><input type="text" id="filtroVendasReal" placeholder="Filtrar por documento, cliente, vendedor ou chave..."></div>
             <div class="table-scroll">
               <table id="tblVendasReal" data-tablekey="VendasReal">
-                <thead><tr><th class="chk-col"><input type="checkbox" id="selAllVendasReal" onchange="toggleSelectAll('VendasReal', this.checked)"></th><th data-sort="data">Data</th><th data-sort="dav">DAV</th><th data-sort="cliente">Cliente</th><th data-sort="vendedor">Vendedor</th><th data-sort="produto">Código</th><th data-sort="produtoNome">Produto</th><th class="num" data-sort="qtd">Qtd</th><th class="num" data-sort="precoUnit">Preço unit.</th><th class="num" data-sort="total">Total item</th><th data-sort="status">Status</th></tr></thead>
+                <thead><tr><th class="chk-col"><input type="checkbox" id="selAllVendasReal" onchange="toggleSelectAll('VendasReal', this.checked)"></th><th data-sort="emissao">Emissão</th><th data-sort="documento">Documento</th><th data-sort="nomeCliente">Cliente</th><th data-sort="nomeVendedor">Vendedor</th><th data-sort="origem">Origem</th><th class="num" data-sort="valorProdutos">Valor produtos</th><th class="num" data-sort="desconto">Desconto</th><th class="num" data-sort="valorTotal">Valor total</th><th>Chave de acesso</th></tr></thead>
                 <tbody></tbody>
               </table>
             </div>
@@ -1130,6 +1131,67 @@
         </div>
       </section>
 
+      <!-- ---- PRODUÇÃO (produzido x vendido no período) ---- -->
+      <section class="view" id="view-producao">
+        <div class="tab-period-bar">
+          <label>De</label><input type="date" id="periodoIniProducao">
+          <span class="tp-sep">até</span><input type="date" id="periodoFimProducao">
+          <button class="btn-buscar" id="btnBuscarProducao">Buscar</button>
+          <span class="tp-status" id="tpStatusProducao"></span>
+        </div>
+        <div class="wgrid" id="kpiProducao"></div>
+        <div class="wgrid cols-2">
+          <div class="widget" data-widget="ProducaoDia">
+            <div class="widget-head">
+              <div class="widget-titles"><h2>Produção por dia</h2><span class="wsub">Quantidade produzida</span></div>
+              <div class="widget-actions">
+                <button class="wicon" data-action="refresh" title="Atualizar">⟳</button>
+                <button class="wicon" data-action="expand" title="Expandir">⤢</button>
+                <button class="wicon" data-action="close" title="Remover">✕</button>
+              </div>
+            </div>
+            <div class="widget-body"><div class="chart-wrap"><canvas id="chartProducaoDia"></canvas></div></div>
+            <div class="widget-foot"><span>&nbsp;</span><span class="ts" data-ts>—</span></div>
+          </div>
+          <div class="widget" data-widget="ProducaoTopProdutos">
+            <div class="widget-head">
+              <div class="widget-titles"><h2>Top 10 produtos produzidos</h2><span class="wsub">Por quantidade no período</span></div>
+              <div class="widget-actions">
+                <button class="wicon" data-action="refresh" title="Atualizar">⟳</button>
+                <button class="wicon" data-action="expand" title="Expandir">⤢</button>
+                <button class="wicon" data-action="close" title="Remover">✕</button>
+              </div>
+            </div>
+            <div class="widget-body"><div class="chart-wrap"><canvas id="chartProducaoTopProdutos"></canvas></div></div>
+            <div class="widget-foot"><span>&nbsp;</span><span class="ts" data-ts>—</span></div>
+          </div>
+        </div>
+        <div class="widget">
+          <div class="widget-head">
+            <div class="widget-titles"><h2>Produzido × vendido por produto</h2><span class="wsub" id="producaoCount"></span></div>
+            <div class="widget-actions export-group">
+              <select class="btn-mini" id="pdfOrientProducao" title="Orientação do PDF">
+                <option value="paisagem" selected>Paisagem</option>
+                <option value="retrato">Retrato</option>
+              </select>
+              <button class="btn-mini" id="exportProducaoPDF">PDF</button>
+              <button class="btn-mini" id="exportProducaoXLSX">Excel</button>
+              <button class="btn-mini" id="exportProducao">CSV</button>
+            </div>
+          </div>
+          <div class="widget-body">
+            <div class="table-filter-row"><input type="text" id="filtroProducao" placeholder="Filtrar por código ou produto..."></div>
+            <div class="table-scroll">
+              <table id="tblProducao" data-tablekey="Producao">
+                <thead><tr><th class="chk-col"><input type="checkbox" id="selAllProducao" onchange="toggleSelectAll('Producao', this.checked)"></th><th data-sort="codigo">Código</th><th data-sort="nome">Produto</th><th class="num" data-sort="qtdProduzida">Qtd produzida</th><th class="num" data-sort="qtdVendida">Qtd vendida</th><th class="num" data-sort="saldo">Saldo</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="widget-foot"><span>Vendido = itens de DAVs no mesmo período (qualquer status)</span><span class="ts" data-ts>—</span></div>
+        </div>
+      </section>
+
     </main>
   </div>
 
@@ -1265,7 +1327,8 @@ const state = {
   token:null, dataInicio:'', dataFim:'',
   davs:[], financeiro:[], produtosMap:new Map(), moduleErrors:{}, empresaNome:'', empresaCnpj:'',
   modulosVisiveis:{},
-  ordemServico:[], notaFornecedor:[], filiais:[], filialSelecionada:''
+  ordemServico:[], notaFornecedor:[], filiais:[], filialSelecionada:'',
+  vendaRealizada:[], vendaRealizadaOS:[], producaoRegistros:[], davsProducaoComparacao:[]
 };
 const charts = {};
 
@@ -1487,9 +1550,11 @@ async function probeModules(){
   state.moduleErrors = {};
   const probes = [
     ['davs','/public-api/v1/davs'],
+    ['venda','/public-api/v2/venda'],
     ['financeiro','/public-api/v1/documento-financeiro'],
     ['ordemServico','/public-api/v1/ordem-servico'],
-    ['notaFornecedor','/public-api/v1/item-nota-entrada']
+    ['notaFornecedor','/public-api/v1/item-nota-entrada'],
+    ['producao','/public-api/v1/registro-producao']
   ];
   await Promise.all(probes.map(async ([key,path])=>{
     try{ await apiGet(path, {offset:0, limit:1}); }
@@ -1505,11 +1570,12 @@ const PERIOD_INPUTS = {
   Pedidos: ['periodoIniPedidos','periodoFimPedidos'],
   Orc: ['periodoIniOrc','periodoFimOrc'],
   OS: ['periodoIniOS','periodoFimOS'],
-  NF: ['periodoIniNF','periodoFimNF']
+  NF: ['periodoIniNF','periodoFimNF'],
+  Producao: ['periodoIniProducao','periodoFimProducao']
 };
 const TAB_KIND = {
-  VisaoGeral:'overview', Vendas:'davs', VendasReal:'davs', Fin:'financeiro',
-  Pedidos:'davs', Orc:'davs', OS:'ordemServico', NF:'notaFornecedor'
+  VisaoGeral:'overview', Vendas:'davs', VendasReal:'venda', Fin:'financeiro',
+  Pedidos:'davs', Orc:'davs', OS:'ordemServico', NF:'notaFornecedor', Producao:'producao'
 };
 const tabData = {}; // tabData[key] = { loaded, ini, fim, davs, financeiro, error, errorFin }
 
@@ -1538,10 +1604,21 @@ async function fetchOSFor(ini, fim){
   return await fetchAllPaginated('/public-api/v1/ordem-servico', q,
     n => setLoading(true, 'Carregando ordens de serviço… ' + n + ' registros'));
 }
+async function fetchVendaFor(ini, fim){
+  const q = { 'emissao.ge': ini, 'emissao.le': fim };
+  if(state.filialSelecionada) q['codigoFilial.eq'] = state.filialSelecionada;
+  return await fetchAllPaginated('/public-api/v2/venda', q,
+    n => setLoading(true, 'Carregando vendas realizadas… ' + n + ' registros'));
+}
 async function fetchNFFor(ini, fim){
   const q = { 'dataEntrada.ge': ini, 'dataEntrada.le': fim };
   return await fetchAllPaginated('/public-api/v1/item-nota-entrada', q,
     n => setLoading(true, 'Carregando notas de fornecedor… ' + n + ' registros'));
+}
+async function fetchProducaoFor(ini, fim){
+  const q = { 'dataHoraProducao.ge': ini, 'dataHoraProducao.le': fim };
+  return await fetchAllPaginated('/public-api/v1/registro-producao', q,
+    n => setLoading(true, 'Carregando produção… ' + n + ' registros'));
 }
 async function ensureProdutosNomesFor(davs){
   const modVis = state.modulosVisiveis || {};
@@ -1588,9 +1665,28 @@ async function loadTab(key, forceReload){
     } else if(kind === 'ordemServico'){
       try{ entry.ordemServico = await fetchOSFor(ini, fim); }
       catch(e){ entry.ordemServico = []; entry.error = e.message; }
+    } else if(kind === 'venda'){
+      try{ entry.venda = await fetchVendaFor(ini, fim); }
+      catch(e){ entry.venda = []; entry.error = e.message; }
+      try{ entry.ordemServico = await fetchOSFor(ini, fim); }
+      catch(e){ entry.ordemServico = []; /* OS é só um complemento aqui, não trava a aba se falhar */ }
     } else if(kind === 'notaFornecedor'){
       try{ entry.notaFornecedor = await fetchNFFor(ini, fim); }
       catch(e){ entry.notaFornecedor = []; entry.error = e.message; }
+    } else if(kind === 'producao'){
+      try{ entry.producao = await fetchProducaoFor(ini, fim); }
+      catch(e){ entry.producao = []; entry.error = e.message; }
+      try{ entry.davsComparacao = await fetchDavsFor(ini, fim, 'Carregando vendas para comparar'); }
+      catch(e){ entry.davsComparacao = []; /* comparação com vendido fica zerada se isso falhar, sem travar a aba */ }
+      const codigosProducao = new Set();
+      entry.producao.forEach(r=>(r.itens||[]).forEach(it=>{ if(it.codigoProduto && !state.produtosMap.has(String(it.codigoProduto))) codigosProducao.add(it.codigoProduto); }));
+      if(codigosProducao.size){
+        setLoading(true, 'Carregando nomes de produtos…');
+        try{
+          const novos = await fetchProdutosNomes(codigosProducao);
+          novos.forEach((nome,cod)=>state.produtosMap.set(cod, nome));
+        }catch(e){ /* segue mostrando código */ }
+      }
     }
     tabData[key] = entry;
     renderTabFromCache(key);
@@ -1622,14 +1718,24 @@ function renderTabFromCache(key){
     state.ordemServico = entry.ordemServico || [];
     state.moduleErrors.ordemServico = entry.error || null;
   }
+  if(kind === 'venda'){
+    state.vendaRealizada = entry.venda || [];
+    state.vendaRealizadaOS = entry.ordemServico || [];
+    state.moduleErrors.venda = entry.error || null;
+  }
   if(kind === 'notaFornecedor'){
     state.notaFornecedor = entry.notaFornecedor || [];
     state.moduleErrors.notaFornecedor = entry.error || null;
   }
+  if(kind === 'producao'){
+    state.producaoRegistros = entry.producao || [];
+    state.davsProducaoComparacao = entry.davsComparacao || [];
+    state.moduleErrors.producao = entry.error || null;
+  }
   const renderFn = {
     VisaoGeral: renderOverview, Vendas: renderVendas, VendasReal: renderVendasRealizadas,
     Fin: renderFinanceiro, Pedidos: ()=>renderDocList(4,'Pedidos'), Orc: ()=>renderDocList(2,'Orcamentos'),
-    OS: renderOrdemServico, NF: renderNotaFornecedor
+    OS: renderOrdemServico, NF: renderNotaFornecedor, Producao: renderProducao
   }[key];
   if(renderFn) renderFn();
   stampAllTimestamps();
@@ -1756,8 +1862,8 @@ function statWidget(label, value, foot, cls){
 }
 
 /* ================= SELEÇÃO DE LINHAS / VISÃO FILTRADA (por tabela) ================= */
-const tableView = { Vendas:[], VendasReal:[], Fin:[], Pedidos:[], Orc:[], OS:[], NF:[] };
-const tableSelection = { Vendas:new Set(), VendasReal:new Set(), Fin:new Set(), Pedidos:new Set(), Orc:new Set(), OS:new Set(), NF:new Set() };
+const tableView = { Vendas:[], VendasReal:[], Fin:[], Pedidos:[], Orc:[], OS:[], NF:[], Producao:[] };
+const tableSelection = { Vendas:new Set(), VendasReal:new Set(), Fin:new Set(), Pedidos:new Set(), Orc:new Set(), OS:new Set(), NF:new Set(), Producao:new Set() };
 
 function assignIds(rows){
   rows.forEach((r,i)=>{ r._id = i; });
@@ -1777,7 +1883,7 @@ function toggleSelectAll(key, checked){
     toggleRowSelection(key, Number(b.dataset.id), checked);
   });
 }
-const COUNT_EL = { Vendas:'vendasCount', VendasReal:'vendasRealCount', Fin:'finCount', Pedidos:'pedidosCount', Orc:'orcCount', OS:'osCount', NF:'nfCount' };
+const COUNT_EL = { Vendas:'vendasCount', VendasReal:'vendasRealCount', Fin:'finCount', Pedidos:'pedidosCount', Orc:'orcCount', OS:'osCount', NF:'nfCount', Producao:'producaoCount' };
 function updateCountLabel(key){
   const el = document.getElementById(COUNT_EL[key]);
   if(!el) return;
@@ -1865,33 +1971,38 @@ function renderVendas(){
 
 /* ================= RENDER: VENDAS REALIZADAS (NOTA FISCAL GERADA) ================= */
 function renderVendasRealizadas(){
-  if(state.moduleErrors.davs){
-    document.getElementById('kpiVendasReal').innerHTML = moduleWarningWidget('Vendas realizadas indisponível', 'Não foi possível carregar documentos de venda neste servidor: ' + state.moduleErrors.davs);
-    destroyChart('vendasRealDia'); destroyChart('vendasRealVendedores');
+  if(state.moduleErrors.venda){
+    document.getElementById('kpiVendasReal').innerHTML = moduleWarningWidget('Vendas realizadas indisponível', 'Não foi possível carregar vendas realizadas neste servidor: ' + state.moduleErrors.venda);
+    destroyChart('vendasRealDia'); destroyChart('vendasRealTipo');
     renderVendasRealTable([]);
     return;
   }
-  const rows = assignIds(flattenItens(d=>d.status===4).sort((a,b)=>(b.qtd||0)-(a.qtd||0)));
-  const totalItens = rows.reduce((s,r)=>s+r.total,0);
-  const davsRealizados = state.davs.filter(d=>d.status===4);
-  const valorDavs = davsRealizados.reduce((s,d)=>s+(d.valor||0),0);
-  const ticketMedio = davsRealizados.length ? (valorDavs/davsRealizados.length) : 0;
+  const vendas = assignIds(state.vendaRealizada.slice());
+  const totalGeral = vendas.reduce((s,v)=>s+(v.valorTotal||0),0);
 
-  // Vendas realizadas também podem vir faturadas direto por uma Ordem de Serviço
-  // (sem passar por um DAV separado) — somamos isso ao total, independente da origem.
+  // pdv preenchido (>0) = venda de balcão/PDV, tipicamente NFC-e.
+  // sem pdv (0/vazio) = venda de back-office, tipicamente NF-e.
+  const nfce = vendas.filter(v=>v.pdv && Number(v.pdv)>0);
+  const nfe = vendas.filter(v=>!v.pdv || Number(v.pdv)===0);
+  const valorNFCe = nfce.reduce((s,v)=>s+(v.valorTotal||0),0);
+  const valorNFe = nfe.reduce((s,v)=>s+(v.valorTotal||0),0);
+
+  const osRealizadas = state.vendaRealizadaOS || [];
   const OS_FATURADA_STATUSES = new Set([5,9,14]);
-  const osRealizadas = (state.moduleErrors.ordemServico ? [] : state.ordemServico).filter(o=>OS_FATURADA_STATUSES.has(o.status));
-  const valorOS = osRealizadas.reduce((s,o)=>s+(o.valor||0),0);
+  const osFaturadas = osRealizadas.filter(o=>OS_FATURADA_STATUSES.has(o.status));
+  const valorOS = osFaturadas.reduce((s,o)=>s+(o.valor||0),0);
+
+  const ticketMedio = vendas.length ? (totalGeral/vendas.length) : 0;
 
   document.getElementById('kpiVendasReal').innerHTML = [
-    statWidget('Valor total realizado', fmtMoney(valorDavs + valorOS), 'somando DAV + Ordem de Serviço, qualquer origem', 'green'),
-    statWidget('Faturado por DAV/orçamento', fmtMoney(valorDavs), davsRealizados.length + ' documentos'),
-    statWidget('Faturado por Ordem de Serviço', fmtMoney(valorOS), osRealizadas.length + ' ordens', valorOS>0?'blue':''),
-    statWidget('Ticket médio (DAV)', fmtMoney(ticketMedio)),
-    statWidget('Itens faturados (DAV)', fmtNum(rows.length))
+    statWidget('Valor total realizado', fmtMoney(totalGeral + valorOS), 'vendas + Ordem de Serviço, qualquer origem', 'green'),
+    statWidget('NF-e (sem PDV)', fmtMoney(valorNFe), nfe.length + ' documentos'),
+    statWidget('NFC-e (via PDV)', fmtMoney(valorNFCe), nfce.length + ' documentos', 'blue'),
+    statWidget('Faturado por Ordem de Serviço', fmtMoney(valorOS), osFaturadas.length + ' ordens'),
+    statWidget('Ticket médio', fmtMoney(ticketMedio), vendas.length + ' vendas')
   ].join('');
 
-  const porDia = groupSum(davsRealizados, d=>d.data, d=>d.valor);
+  const porDia = groupSum(vendas, v=>v.emissao, v=>v.valorTotal);
   const dias = [...porDia.keys()].sort();
   destroyChart('vendasRealDia');
   charts.vendasRealDia = new Chart(document.getElementById('chartVendasRealDia'), {
@@ -1900,28 +2011,37 @@ function renderVendasRealizadas(){
     options: baseChartOptions()
   });
 
-  const porVendedor = topN(groupSum(davsRealizados, d=>d.nomeVendedor, d=>d.valor), 10);
-  destroyChart('vendasRealVendedores');
-  charts.vendasRealVendedores = new Chart(document.getElementById('chartVendasRealVendedores'), {
-    type:'bar',
-    data:{ labels:porVendedor.map(x=>x[0]), datasets:[{ label:'Valor (R$)', data:porVendedor.map(x=>x[1]), backgroundColor:'#4f94c4' }] },
-    options: baseChartOptions({ indexAxis:'y' })
+  destroyChart('vendasRealTipo');
+  charts.vendasRealTipo = new Chart(document.getElementById('chartVendasRealVendedores'), {
+    type:'doughnut',
+    data:{ labels:['NF-e (sem PDV)','NFC-e (via PDV)'], datasets:[{ data:[valorNFe, valorNFCe], backgroundColor:['#4f94c4','#eeb15f'], borderColor:'#ffffff', borderWidth:2 }] },
+    options: donutOptions()
   });
 
-  window.__vendasRealRowsFull = rows;
-  renderVendasRealTable(rows);
+  window.__vendasRealRowsFull = vendas;
+  renderVendasRealTable(vendas);
 }
 
-function renderVendasRealTable(rows){
-  tableView.VendasReal = rows;
-  const shown = rows.slice(0,300);
+function origemVendaLabel(v){
+  return (v.pdv && Number(v.pdv)>0) ? ('NFC-e (PDV '+v.pdv+')') : 'NF-e';
+}
+function truncChave(chave){
+  if(!chave) return '—';
+  const s = String(chave);
+  return s.length>14 ? (s.slice(0,10)+'…'+s.slice(-4)) : s;
+}
+
+function renderVendasRealTable(vendas){
+  tableView.VendasReal = vendas;
+  const shown = vendas.slice(0,300);
   updateCountLabel('VendasReal');
-  document.querySelector('#tblVendasReal tbody').innerHTML = shown.map(r=>
-    '<tr data-rowkey="VendasReal-'+r._id+'" class="'+(tableSelection.VendasReal.has(r._id)?'row-selected':'')+'">'+
-    '<td class="chk-col"><input type="checkbox" class="rowchk-VendasReal" data-id="'+r._id+'" '+(tableSelection.VendasReal.has(r._id)?'checked':'')+' onchange="toggleRowSelection(\'VendasReal\', '+r._id+', this.checked)"></td>'+
-    '<td>'+fmtDate(r.data)+'</td><td>'+r.dav+'</td><td>'+esc(r.cliente)+'</td><td>'+esc(r.vendedor)+'</td>'+
-    '<td>'+esc(r.produto)+'</td><td>'+esc(r.produtoNome || r.produto)+'</td><td class="num">'+fmtNum(r.qtd)+'</td><td class="num">'+fmtMoney(r.precoUnit)+'</td><td class="num">'+fmtMoney(r.total)+'</td><td>'+statusDavPill(r.status)+'</td></tr>'
-  ).join('') || '<tr><td colspan="11" class="empty-note">Nenhuma venda faturada encontrada.</td></tr>';
+  document.querySelector('#tblVendasReal tbody').innerHTML = shown.map(v=>
+    '<tr data-rowkey="VendasReal-'+v._id+'" class="'+(tableSelection.VendasReal.has(v._id)?'row-selected':'')+'">'+
+    '<td class="chk-col"><input type="checkbox" class="rowchk-VendasReal" data-id="'+v._id+'" '+(tableSelection.VendasReal.has(v._id)?'checked':'')+' onchange="toggleRowSelection(\'VendasReal\', '+v._id+', this.checked)"></td>'+
+    '<td>'+fmtDate(v.emissao)+'</td><td>'+esc(v.documento)+'</td><td>'+esc(v.nomeCliente||'—')+'</td><td>'+esc(v.nomeVendedor||'—')+'</td>'+
+    '<td>'+esc(origemVendaLabel(v))+'</td><td class="num">'+fmtMoney(v.valorProdutos)+'</td><td class="num">'+fmtMoney(v.desconto)+'</td><td class="num">'+fmtMoney(v.valorTotal)+'</td>'+
+    '<td title="'+esc(v.chaveAcesso||'')+'">'+esc(truncChave(v.chaveAcesso))+'</td></tr>'
+  ).join('') || '<tr><td colspan="10" class="empty-note">Nenhuma venda faturada encontrada.</td></tr>';
 }
 
 function statusDavPill(status){
@@ -2187,6 +2307,79 @@ function renderNFTable(rows){
   ).join('') || '<tr><td colspan="9" class="empty-note">Nenhuma nota de fornecedor encontrada.</td></tr>';
 }
 
+/* ================= RENDER: PRODUÇÃO (produzido × vendido) ================= */
+function renderProducao(){
+  if(state.moduleErrors.producao){
+    document.getElementById('kpiProducao').innerHTML = moduleWarningWidget('Produção indisponível', 'Não foi possível carregar registros de produção neste servidor: ' + state.moduleErrors.producao);
+    destroyChart('ProducaoDia'); destroyChart('ProducaoTopProdutos');
+    renderProducaoTable([]);
+    return;
+  }
+  const registros = state.producaoRegistros || [];
+  const produzidos = registros.filter(r=>r.status===1).length;
+
+  const qtdProduzida = new Map();
+  registros.forEach(r=>(r.itens||[]).forEach(it=>{
+    const cod = it.codigoProduto;
+    if(!cod) return;
+    qtdProduzida.set(cod, (qtdProduzida.get(cod)||0) + (it.quantidade||0));
+  }));
+  const totalProduzido = [...qtdProduzida.values()].reduce((s,v)=>s+v,0);
+
+  const qtdVendida = new Map();
+  (state.davsProducaoComparacao||[]).forEach(d=>(d.itens||[]).forEach(it=>{
+    const cod = it.produto;
+    if(!cod) return;
+    qtdVendida.set(cod, (qtdVendida.get(cod)||0) + (it.quantidade||0));
+  }));
+  const totalVendido = [...qtdVendida.values()].reduce((s,v)=>s+v,0);
+
+  document.getElementById('kpiProducao').innerHTML = [
+    statWidget('Registros de produção', fmtNum(registros.length)),
+    statWidget('Produzidos (concluídos)', fmtNum(produzidos), registros.length ? (produzidos/registros.length*100).toFixed(1)+'% do total':'', 'green'),
+    statWidget('Qtd total produzida', fmtNum(totalProduzido)),
+    statWidget('Qtd total vendida (mesmo período)', fmtNum(totalVendido), '', 'blue')
+  ].join('');
+
+  const porDia = groupSum(registros.flatMap(r=>(r.itens||[]).map(it=>({dia:(r.dataHoraProducao||'').slice(0,10), qtd:it.quantidade||0}))), x=>x.dia, x=>x.qtd);
+  const dias = [...porDia.keys()].filter(Boolean).sort();
+  destroyChart('ProducaoDia');
+  charts.ProducaoDia = new Chart(document.getElementById('chartProducaoDia'), {
+    type:'line',
+    data:{ labels:dias.map(fmtDate), datasets:[{ label:'Qtd produzida', data:dias.map(d=>porDia.get(d)), borderColor:'#eeb15f', backgroundColor:'rgba(238,177,95,0.2)', fill:true, tension:0.25, pointRadius:2 }] },
+    options: baseChartOptions()
+  });
+
+  const topProdutos = topN(new Map([...qtdProduzida.entries()].map(([cod,qtd])=>[produtoLabel(cod), qtd])), 10);
+  destroyChart('ProducaoTopProdutos');
+  charts.ProducaoTopProdutos = new Chart(document.getElementById('chartProducaoTopProdutos'), {
+    type:'bar',
+    data:{ labels:topProdutos.map(x=>x[0]), datasets:[{ label:'Qtd produzida', data:topProdutos.map(x=>x[1]), backgroundColor:'#63b587' }] },
+    options: baseChartOptions({ indexAxis:'y' })
+  });
+
+  const todosCodigos = new Set([...qtdProduzida.keys(), ...qtdVendida.keys()]);
+  const linhas = assignIds([...todosCodigos].map(cod=>{
+    const produzida = qtdProduzida.get(cod)||0;
+    const vendida = qtdVendida.get(cod)||0;
+    return { codigo:cod, nome: produtoNome(cod) || cod, qtdProduzida:produzida, qtdVendida:vendida, saldo: produzida - vendida };
+  }).sort((a,b)=>b.qtdProduzida-a.qtdProduzida));
+
+  window.__producaoRowsFull = linhas;
+  renderProducaoTable(linhas);
+}
+
+function renderProducaoTable(rows){
+  tableView.Producao = rows;
+  const shown = rows.slice(0,300);
+  updateCountLabel('Producao');
+  document.querySelector('#tblProducao tbody').innerHTML = shown.map(r=>
+    '<tr data-rowkey="Producao-'+r._id+'" class="'+(tableSelection.Producao.has(r._id)?'row-selected':'')+'">'+
+    '<td class="chk-col"><input type="checkbox" class="rowchk-Producao" data-id="'+r._id+'" '+(tableSelection.Producao.has(r._id)?'checked':'')+' onchange="toggleRowSelection(\'Producao\', '+r._id+', this.checked)"></td>'+
+    '<td>'+esc(r.codigo)+'</td><td>'+esc(r.nome)+'</td><td class="num">'+fmtNum(r.qtdProduzida)+'</td><td class="num">'+fmtNum(r.qtdVendida)+'</td><td class="num">'+fmtNum(r.saldo)+'</td></tr>'
+  ).join('') || '<tr><td colspan="6" class="empty-note">Nenhum registro de produção encontrado.</td></tr>';
+}
+
 function stampAllTimestamps(){
   const now = fmtTimestamp();
   document.querySelectorAll('[data-ts]').forEach(el=>{ el.textContent = 'Consultado em ' + now; });
@@ -2210,10 +2403,12 @@ function renderAll(){
    normalmente indica módulo não licenciado/contratado pelo cliente, não um erro real.
    "Visão geral" nunca é escondida (ela já se adapta ao que está disponível). */
 const MODULE_TO_VIEWS = {
-  davs: ['vendas','vendasRealizadas','pedidos','orcamentos'],
+  davs: ['vendas','pedidos','orcamentos'],
+  venda: ['vendasRealizadas'],
   financeiro: ['financeiro'],
   ordemServico: ['ordemServico'],
-  notaFornecedor: ['notaFornecedor']
+  notaFornecedor: ['notaFornecedor'],
+  producao: ['producao']
 };
 function applyModuleVisibility(){
   const hiddenViews = new Set();
@@ -2265,8 +2460,8 @@ document.getElementById('exportVendas').addEventListener('click', ()=>{
 });
 document.getElementById('exportVendasReal').addEventListener('click', ()=>{
   const rows = getExportRows('VendasReal');
-  const csv = toCSV(rows, ['Data','DAV','Cliente','Vendedor','CodigoProduto','NomeProduto','Quantidade','PrecoUnitario','Total','Status'],
-    r=>[fmtDate(r.data),r.dav,r.cliente,r.vendedor,r.produto,r.produtoNome||'',r.qtd,r.precoUnit,r.total,STATUS_DAV[r.status]||r.status]);
+  const csv = toCSV(rows, ['Emissao','Documento','Cliente','Vendedor','Origem','ValorProdutos','Desconto','ValorTotal','ChaveAcesso'],
+    v=>[fmtDate(v.emissao),v.documento,v.nomeCliente,v.nomeVendedor,origemVendaLabel(v),v.valorProdutos||0,v.desconto||0,v.valorTotal||0,v.chaveAcesso||'']);
   downloadCSV(csv, 'vendas_realizadas' + exportSuffix('VendasReal', (window.__vendasRealRowsFull||[]).length) + '.csv');
 });
 document.getElementById('exportFin').addEventListener('click', ()=>{
@@ -2299,19 +2494,27 @@ document.getElementById('exportNF').addEventListener('click', ()=>{
     r=>[fmtDate(r.dataEntrada),r.numeroNotaFiscal,r.modelo,r.fornecedorNome,r.produtoDescricao||r.produtoCodigo,r.precoUnitario||0,r.total||0,r.valorTotal]);
   downloadCSV(csv, 'notas_fornecedor' + exportSuffix('NF', (window.__nfRowsFull||[]).length) + '.csv');
 });
+document.getElementById('exportProducao').addEventListener('click', ()=>{
+  const rows = getExportRows('Producao');
+  const csv = toCSV(rows, ['Codigo','Produto','QtdProduzida','QtdVendida','Saldo'],
+    r=>[r.codigo,r.nome,r.qtdProduzida,r.qtdVendida,r.saldo]);
+  downloadCSV(csv, 'producao' + exportSuffix('Producao', (window.__producaoRowsFull||[]).length) + '.csv');
+});
 
 /* ================= EXPORTAÇÃO PDF / EXCEL ================= */
 const VENDAS_HEADERS = ['Data','DAV','Cliente','Vendedor','Código','Produto','Qtd','Preço unit.','Total','Status'];
+const VENDAS_REAL_HEADERS = ['Emissão','Documento','Cliente','Vendedor','Origem','Valor produtos','Desconto','Valor total','Chave de acesso'];
 const FIN_HEADERS = ['Documento','Entidade','Tipo','Emissão','Vencimento','Valor','Saldo','Status'];
 const DOC_HEADERS = ['Código','Data','Cliente','Vendedor','Valor','Status'];
 const OS_HEADERS = ['Código','Data','Cliente','Atendente','Produtos','Serviços','Total','Status'];
 const NF_HEADERS = ['Data entrada','Nota','Modelo','Fornecedor','Produto','Valor do item','Total do item','Total da nota'];
+const PRODUCAO_HEADERS = ['Código','Produto','Qtd produzida','Qtd vendida','Saldo'];
 
 function buildVendasRowsRaw(){
   return getExportRows('Vendas').map(r=>[fmtDate(r.data), r.dav, r.cliente, r.vendedor, r.produto, r.produtoNome || r.produto, r.qtd||0, r.precoUnit||0, r.total||0, STATUS_DAV[r.status]||r.status]);
 }
 function buildVendasRealRowsRaw(){
-  return getExportRows('VendasReal').map(r=>[fmtDate(r.data), r.dav, r.cliente, r.vendedor, r.produto, r.produtoNome || r.produto, r.qtd||0, r.precoUnit||0, r.total||0, STATUS_DAV[r.status]||r.status]);
+  return getExportRows('VendasReal').map(v=>[fmtDate(v.emissao), v.documento, v.nomeCliente, v.nomeVendedor, origemVendaLabel(v), v.valorProdutos||0, v.desconto||0, v.valorTotal||0, v.chaveAcesso||'']);
 }
 function buildFinRowsRaw(){
   return getExportRows('Fin').map(f=>[
@@ -2327,6 +2530,9 @@ function buildOSRowsRaw(arr){
 }
 function buildNFRowsRaw(arr){
   return arr.map(r=>[fmtDate(r.dataEntrada), r.numeroNotaFiscal||'', r.modelo||'', r.fornecedorNome||'', r.produtoDescricao||r.produtoCodigo||'', r.precoUnitario||0, r.total||0, r.valorTotal||0]);
+}
+function buildProducaoRowsRaw(arr){
+  return arr.map(r=>[r.codigo||'', r.nome||'', r.qtdProduzida||0, r.qtdVendida||0, r.saldo||0]);
 }
 function buildResumoRows(){
   const davs = state.davs;
@@ -2434,12 +2640,13 @@ function wireTableExport(prefix, headers, buildRowsFn, moneyCols, numCols, filen
 }
 
 wireTableExport('Vendas', VENDAS_HEADERS, buildVendasRowsRaw, [7,8], [6], 'vendas_detalhadas', 'Vendas não realizadas', ()=>(window.__vendasRowsFull||[]).length);
-wireTableExport('VendasReal', VENDAS_HEADERS, buildVendasRealRowsRaw, [7,8], [6], 'vendas_realizadas', 'Vendas realizadas', ()=>(window.__vendasRealRowsFull||[]).length);
+wireTableExport('VendasReal', VENDAS_REAL_HEADERS, buildVendasRealRowsRaw, [5,6,7], [], 'vendas_realizadas', 'Vendas realizadas', ()=>(window.__vendasRealRowsFull||[]).length);
 wireTableExport('Fin', FIN_HEADERS, buildFinRowsRaw, [5,6], [], 'financeiro', 'Documentos financeiros', ()=>state.financeiro.length);
 wireTableExport('Pedidos', DOC_HEADERS, ()=>buildDocRowsRaw(getExportRows('Pedidos')), [4], [], 'pedidos_de_venda', 'Pedidos de venda', ()=>(window.__pedidosRowsFull||[]).length);
 wireTableExport('Orc', DOC_HEADERS, ()=>buildDocRowsRaw(getExportRows('Orc')), [4], [], 'orcamentos', 'Orçamentos', ()=>(window.__orcRowsFull||[]).length);
 wireTableExport('OS', OS_HEADERS, ()=>buildOSRowsRaw(getExportRows('OS')), [4,5,6], [], 'ordens_de_servico', 'Ordens de serviço', ()=>(window.__osRowsFull||[]).length);
 wireTableExport('NF', NF_HEADERS, ()=>buildNFRowsRaw(getExportRows('NF')), [5,6,7], [], 'notas_fornecedor', 'Notas fiscais de fornecedor', ()=>(window.__nfRowsFull||[]).length);
+wireTableExport('Producao', PRODUCAO_HEADERS, ()=>buildProducaoRowsRaw(getExportRows('Producao')), [], [2,3,4], 'producao', 'Produção', ()=>(window.__producaoRowsFull||[]).length);
 
 /* ================= FILTROS DE BUSCA NAS TABELAS ================= */
 function wireTableFilter(inputId, getFullRows, matchFields, renderFn, extraArg){
@@ -2458,7 +2665,7 @@ wireTableFilter('filtroVendas', ()=>window.__vendasRowsFull||[], [
 ], renderVendasTable);
 
 wireTableFilter('filtroVendasReal', ()=>window.__vendasRealRowsFull||[], [
-  r=>r.data, r=>r.dav, r=>r.cliente, r=>r.vendedor, r=>r.produtoLabel
+  v=>v.documento, v=>v.nomeCliente, v=>v.nomeVendedor, v=>v.chaveAcesso
 ], renderVendasRealTable);
 
 wireTableFilter('filtroFin', ()=>window.__finRowsFull||[], [
@@ -2480,6 +2687,10 @@ wireTableFilter('filtroOS', ()=>window.__osRowsFull||[], [
 wireTableFilter('filtroNF', ()=>window.__nfRowsFull||[], [
   r=>r.numeroNotaFiscal, r=>r.fornecedorNome, r=>r.produtoDescricao, r=>r.produtoCodigo, r=>r.modelo
 ], renderNFTable);
+
+wireTableFilter('filtroProducao', ()=>window.__producaoRowsFull||[], [
+  r=>r.codigo, r=>r.nome
+], renderProducaoTable);
 
 /* ================= ORDENAÇÃO POR COLUNA (duplo clique no cabeçalho) ================= */
 const SORT_ACCESSORS = {
@@ -2517,7 +2728,18 @@ const SORT_ACCESSORS = {
   }
 };
 SORT_ACCESSORS.Orc = SORT_ACCESSORS.Pedidos;
-SORT_ACCESSORS.VendasReal = SORT_ACCESSORS.Vendas;
+SORT_ACCESSORS.VendasReal = {
+  emissao:{fn:v=>v.emissao, numeric:false}, documento:{fn:v=>v.documento, numeric:false},
+  nomeCliente:{fn:v=>v.nomeCliente, numeric:false}, nomeVendedor:{fn:v=>v.nomeVendedor, numeric:false},
+  origem:{fn:v=>origemVendaLabel(v), numeric:false},
+  valorProdutos:{fn:v=>v.valorProdutos, numeric:true}, desconto:{fn:v=>v.desconto, numeric:true},
+  valorTotal:{fn:v=>v.valorTotal, numeric:true}
+};
+SORT_ACCESSORS.Producao = {
+  codigo:{fn:r=>r.codigo, numeric:false}, nome:{fn:r=>r.nome, numeric:false},
+  qtdProduzida:{fn:r=>r.qtdProduzida, numeric:true}, qtdVendida:{fn:r=>r.qtdVendida, numeric:true},
+  saldo:{fn:r=>r.saldo, numeric:true}
+};
 
 const RENDER_TABLE_FN = {
   Vendas: rows=>renderVendasTable(rows),
@@ -2526,7 +2748,8 @@ const RENDER_TABLE_FN = {
   Pedidos: rows=>renderDocTable(rows,4),
   Orc: rows=>renderDocTable(rows,2),
   OS: rows=>renderOSTable(rows),
-  NF: rows=>renderNFTable(rows)
+  NF: rows=>renderNFTable(rows),
+  Producao: rows=>renderProducaoTable(rows)
 };
 
 const sortState = {};
@@ -2592,7 +2815,7 @@ function buildFinRowsFullRaw(){
 /* ================= NAVEGAÇÃO (sidebar) ================= */
 const VIEW_TO_TABKEY = {
   visaoGeral:'VisaoGeral', vendas:'Vendas', vendasRealizadas:'VendasReal', financeiro:'Fin',
-  pedidos:'Pedidos', orcamentos:'Orc', ordemServico:'OS', notaFornecedor:'NF'
+  pedidos:'Pedidos', orcamentos:'Orc', ordemServico:'OS', notaFornecedor:'NF', producao:'Producao'
 };
 document.querySelectorAll('.side-nav .item').forEach(item=>{
   item.addEventListener('click', ()=>{
