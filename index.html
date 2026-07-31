@@ -486,6 +486,36 @@
         </div>
       </div>
 
+      <details class="ug-advanced" open>
+        <summary>Personalizar menu — escolha o que aparece no painel</summary>
+        <div class="ug-subfield">
+          <div class="ug-hint" style="margin:0 0 10px;">Desmarque os módulos que esse cliente não usa. Fica salvo e some do menu lateral.</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#2b3540;cursor:pointer;">
+              <input type="checkbox" class="modChk" data-mod="vendas" checked> Vendas não realizadas
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#2b3540;cursor:pointer;">
+              <input type="checkbox" class="modChk" data-mod="vendasRealizadas" checked> Vendas realizadas
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#2b3540;cursor:pointer;">
+              <input type="checkbox" class="modChk" data-mod="financeiro" checked> Financeiro
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#2b3540;cursor:pointer;">
+              <input type="checkbox" class="modChk" data-mod="pedidos" checked> Pedidos
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#2b3540;cursor:pointer;">
+              <input type="checkbox" class="modChk" data-mod="orcamentos" checked> Orçamentos
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#2b3540;cursor:pointer;">
+              <input type="checkbox" class="modChk" data-mod="ordemServico" checked> Ordens de serviço
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#2b3540;cursor:pointer;">
+              <input type="checkbox" class="modChk" data-mod="notaFornecedor" checked> Notas de fornecedor
+            </label>
+          </div>
+        </div>
+      </details>
+
       <details class="ug-advanced">
         <summary>Avançado — código de autorização (Basic) direto</summary>
         <div class="ug-subfield">
@@ -1161,6 +1191,7 @@ const state = {
   server:'', clientId:'', clientSecret:'', basicOverride:'',
   token:null, dataInicio:'', dataFim:'',
   davs:[], financeiro:[], produtosMap:new Map(), moduleErrors:{}, empresaNome:'', empresaCnpj:'',
+  modulosVisiveis:{},
   ordemServico:[], notaFornecedor:[], filiais:[], filialSelecionada:''
 };
 const charts = {};
@@ -2017,6 +2048,12 @@ function applyModuleVisibility(){
       MODULE_TO_VIEWS[mod].forEach(v=>hiddenViews.add(v));
     }
   });
+  const prefs = state.modulosVisiveis || {};
+  Object.keys(prefs).forEach(mod=>{
+    if(prefs[mod] === false){
+      (MODULE_TO_VIEWS[mod] || [mod]).forEach(v=>hiddenViews.add(v));
+    }
+  });
   let activeWasHidden = false;
   document.querySelectorAll('.side-nav .item').forEach(item=>{
     const isHidden = hiddenViews.has(item.dataset.view);
@@ -2489,7 +2526,8 @@ function saveCreds(){
   try{
     localStorage.setItem(CREDS_KEY, JSON.stringify({
       server: state.server, clientId: state.clientId, clientSecret: state.clientSecret,
-      basicOverride: state.basicOverride, dataInicio: state.dataInicio, dataFim: state.dataFim
+      basicOverride: state.basicOverride, dataInicio: state.dataInicio, dataFim: state.dataFim,
+      modulosVisiveis: state.modulosVisiveis
     }));
   }catch(e){ /* localStorage indisponível — ignora silenciosamente */ }
 }
@@ -2516,6 +2554,10 @@ async function attemptConnect(isAuto){
   state.basicOverride = document.getElementById('fBasic').value.trim();
   state.dataInicio = document.getElementById('fDataIni').value;
   state.dataFim = document.getElementById('fDataFim').value;
+  state.modulosVisiveis = {};
+  document.querySelectorAll('.modChk').forEach(chk=>{
+    state.modulosVisiveis[chk.dataset.mod] = chk.checked;
+  });
 
   if(!state.server){ if(!isAuto) showError('Informe o endereço do servidor.'); return false; }
   if(!state.basicOverride && (!state.clientId || !state.clientSecret)){
@@ -2603,15 +2645,23 @@ document.getElementById('btnLogout').addEventListener('click', ()=>{
 
 /* ================= RECONEXÃO AUTOMÁTICA AO ABRIR ================= */
 (function tryAutoConnect(){
-  if(!isMasterAuthed()) return;
   const saved = loadSavedCreds();
-  if(!saved) return;
-  document.getElementById('fServer').value = saved.server || document.getElementById('fServer').value;
-  document.getElementById('fClientId').value = saved.clientId || '';
-  document.getElementById('fClientSecret').value = saved.clientSecret || '';
-  document.getElementById('fBasic').value = saved.basicOverride || '';
-  document.getElementById('fDataIni').value = saved.dataInicio || d0.ini;
-  document.getElementById('fDataFim').value = saved.dataFim || d0.fim;
+  if(saved){
+    document.getElementById('fServer').value = saved.server || document.getElementById('fServer').value;
+    document.getElementById('fClientId').value = saved.clientId || '';
+    document.getElementById('fClientSecret').value = saved.clientSecret || '';
+    document.getElementById('fBasic').value = saved.basicOverride || '';
+    document.getElementById('fDataIni').value = saved.dataInicio || d0.ini;
+    document.getElementById('fDataFim').value = saved.dataFim || d0.fim;
+    if(saved.modulosVisiveis){
+      document.querySelectorAll('.modChk').forEach(chk=>{
+        if(saved.modulosVisiveis[chk.dataset.mod] !== undefined){
+          chk.checked = saved.modulosVisiveis[chk.dataset.mod];
+        }
+      });
+    }
+  }
+  if(!isMasterAuthed() || !saved) return;
   attemptConnect(true);
 })();
 </script>
