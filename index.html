@@ -274,6 +274,22 @@
   .view.active{display:block;}
 
   /* grade de widgets */
+  .tab-period-bar{
+    display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:14px; padding:10px 12px;
+    background:var(--panel); border:1px solid var(--border); border-radius:5px;
+  }
+  .tab-period-bar label{ font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.04em; }
+  .tab-period-bar input[type=date]{
+    border:1px solid var(--border); border-radius:3px; padding:6px 8px; font-size:12.5px; color:var(--text); background:#fff;
+  }
+  .tab-period-bar .tp-sep{ font-size:11.5px; color:var(--muted-dim); }
+  .tab-period-bar .tp-status{ font-size:11px; color:var(--muted-dim); margin-left:auto; }
+  .btn-buscar{
+    background:var(--topbar); color:#fff; border:none; padding:7px 16px; border-radius:3px; font-size:12.5px;
+    font-weight:600; cursor:pointer;
+  }
+  .btn-buscar:hover{ filter:brightness(1.08); }
+  .btn-buscar:disabled{ opacity:0.6; cursor:not-allowed; }
   .wgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:16px;}
   .wgrid.cols-2{grid-template-columns:1.3fr 1fr;}
   @media (max-width:1100px){.wgrid,.wgrid.cols-2{grid-template-columns:1fr 1fr;}}
@@ -596,10 +612,6 @@
       <select class="tbtn" id="filialSelect" title="Filial" style="min-width:160px;">
         <option value="">Todas as filiais</option>
       </select>
-      <input type="date" id="topDataIni">
-      <span class="period-sep">até</span>
-      <input type="date" id="topDataFim">
-      <button class="tbtn" id="btnReload">Atualizar</button>
       <button class="tbtn" id="btnLogout">Trocar conta</button>
     </div>
   </div>
@@ -630,6 +642,12 @@
 
       <!-- ---- VISÃO GERAL ---- -->
       <section class="view active" id="view-visaoGeral">
+        <div class="tab-period-bar">
+          <label>De</label><input type="date" id="periodoIniVisaoGeral">
+          <span class="tp-sep">até</span><input type="date" id="periodoFimVisaoGeral">
+          <button class="btn-buscar" id="btnBuscarVisaoGeral">Buscar</button>
+          <span class="tp-status" id="tpStatusVisaoGeral"></span>
+        </div>
         <div class="wgrid" id="kpiOverview"></div>
         <div class="wgrid cols-2">
           <div class="widget" data-widget="vendasDia">
@@ -687,6 +705,12 @@
 
       <!-- ---- VENDAS DETALHADAS ---- -->
       <section class="view" id="view-vendas">
+        <div class="tab-period-bar">
+          <label>De</label><input type="date" id="periodoIniVendas">
+          <span class="tp-sep">até</span><input type="date" id="periodoFimVendas">
+          <button class="btn-buscar" id="btnBuscarVendas">Buscar</button>
+          <span class="tp-status" id="tpStatusVendas"></span>
+        </div>
         <div class="wgrid" id="kpiVendas"></div>
         <div class="wgrid cols-2">
           <div class="widget" data-widget="topProdutos">
@@ -742,6 +766,12 @@
 
       <!-- ---- VENDAS REALIZADAS (NOTA FISCAL GERADA) ---- -->
       <section class="view" id="view-vendasRealizadas">
+        <div class="tab-period-bar">
+          <label>De</label><input type="date" id="periodoIniVendasReal">
+          <span class="tp-sep">até</span><input type="date" id="periodoFimVendasReal">
+          <button class="btn-buscar" id="btnBuscarVendasReal">Buscar</button>
+          <span class="tp-status" id="tpStatusVendasReal"></span>
+        </div>
         <div class="wgrid" id="kpiVendasReal"></div>
         <div class="wgrid cols-2">
           <div class="widget" data-widget="vendasRealDia">
@@ -797,6 +827,12 @@
 
       <!-- ---- FINANCEIRO ---- -->
       <section class="view" id="view-financeiro">
+        <div class="tab-period-bar">
+          <label>De</label><input type="date" id="periodoIniFin">
+          <span class="tp-sep">até</span><input type="date" id="periodoFimFin">
+          <button class="btn-buscar" id="btnBuscarFin">Buscar</button>
+          <span class="tp-status" id="tpStatusFin"></span>
+        </div>
         <div class="wgrid" id="kpiFinanceiro"></div>
         <div class="wgrid cols-2">
           <div class="widget" data-widget="aging">
@@ -852,6 +888,12 @@
 
       <!-- ---- PEDIDOS DE VENDA ---- -->
       <section class="view" id="view-pedidos">
+        <div class="tab-period-bar">
+          <label>De</label><input type="date" id="periodoIniPedidos">
+          <span class="tp-sep">até</span><input type="date" id="periodoFimPedidos">
+          <button class="btn-buscar" id="btnBuscarPedidos">Buscar</button>
+          <span class="tp-status" id="tpStatusPedidos"></span>
+        </div>
         <div class="wgrid" id="kpiPedidos"></div>
         <div class="wgrid cols-2">
           <div class="widget" data-widget="PedidosStatus">
@@ -907,6 +949,12 @@
 
       <!-- ---- ORÇAMENTOS ---- -->
       <section class="view" id="view-orcamentos">
+        <div class="tab-period-bar">
+          <label>De</label><input type="date" id="periodoIniOrc">
+          <span class="tp-sep">até</span><input type="date" id="periodoFimOrc">
+          <button class="btn-buscar" id="btnBuscarOrc">Buscar</button>
+          <span class="tp-status" id="tpStatusOrc"></span>
+        </div>
         <div class="wgrid" id="kpiOrcamentos"></div>
         <div class="wgrid cols-2">
           <div class="widget" data-widget="OrcamentosStatus">
@@ -962,6 +1010,12 @@
 
       <!-- ---- ORDENS DE SERVIÇO ---- -->
       <section class="view" id="view-ordemServico">
+        <div class="tab-period-bar">
+          <label>De</label><input type="date" id="periodoIniOS">
+          <span class="tp-sep">até</span><input type="date" id="periodoFimOS">
+          <button class="btn-buscar" id="btnBuscarOS">Buscar</button>
+          <span class="tp-status" id="tpStatusOS"></span>
+        </div>
         <div class="wgrid" id="kpiOS"></div>
         <div class="wgrid cols-2">
           <div class="widget" data-widget="OSStatus">
@@ -1017,6 +1071,12 @@
 
       <!-- ---- NOTAS FISCAIS DE FORNECEDOR (ENTRADA) ---- -->
       <section class="view" id="view-notaFornecedor">
+        <div class="tab-period-bar">
+          <label>De</label><input type="date" id="periodoIniNF">
+          <span class="tp-sep">até</span><input type="date" id="periodoFimNF">
+          <button class="btn-buscar" id="btnBuscarNF">Buscar</button>
+          <span class="tp-status" id="tpStatusNF"></span>
+        </div>
         <div class="wgrid" id="kpiNF"></div>
         <div class="wgrid cols-2">
           <div class="widget" data-widget="NFFornecedores">
@@ -1396,20 +1456,7 @@ async function fetchProdutosNomes(codigos){
   return map;
 }
 
-async function loadAllData(){
-  setLoading(true, 'Autenticando…');
-  const davQuery = { 'data.ge': state.dataInicio, 'data.le': state.dataFim };
-  if(state.filialSelecionada) davQuery['filial.eq'] = state.filialSelecionada;
-  const finQuery = { 'vencimento.ge': state.dataInicio, 'vencimento.le': state.dataFim };
-  const modVis = state.modulosVisiveis || {};
-  const wantFin = modVis.financeiro !== false;
-  const wantOS = modVis.ordemServico !== false;
-  const wantNF = modVis.notaFornecedor !== false;
-  const wantProdutos = (modVis.vendas !== false) || (modVis.vendasRealizadas !== false);
-
-  await authenticate();
-  state.moduleErrors = {};
-
+async function loadEmpresaEFiliais(){
   setLoading(true, 'Carregando dados da empresa…');
   state.empresaNome = '';
   state.empresaCnpj = '';
@@ -1428,77 +1475,168 @@ async function loadAllData(){
       if(Array.isArray(empresas) && empresas.length && empresas[0].razaosocial){
         state.empresaNome = empresas[0].razaosocial;
       }
-    }catch(e2){
-      state.moduleErrors.empresa = e.message;
-    }
+    }catch(e2){ /* segue sem nome de empresa */ }
   }
   populateFilialSelect();
+}
 
-  setLoading(true, 'Carregando documentos de venda (DAVs)…');
+/* Checagem rápida (1 registro) de cada módulo opcional, só pra saber se existe
+   nessa conta/servidor — usada só pra decidir o que mostrar no menu lateral.
+   Os dados de verdade de cada aba são buscados sob demanda (loadTab). */
+async function probeModules(){
+  state.moduleErrors = {};
+  const probes = [
+    ['davs','/public-api/v1/davs'],
+    ['financeiro','/public-api/v1/documento-financeiro'],
+    ['ordemServico','/public-api/v1/ordem-servico'],
+    ['notaFornecedor','/public-api/v1/item-nota-entrada']
+  ];
+  await Promise.all(probes.map(async ([key,path])=>{
+    try{ await apiGet(path, {offset:0, limit:1}); }
+    catch(e){ state.moduleErrors[key] = e.message; }
+  }));
+}
+
+const PERIOD_INPUTS = {
+  VisaoGeral: ['periodoIniVisaoGeral','periodoFimVisaoGeral'],
+  Vendas: ['periodoIniVendas','periodoFimVendas'],
+  VendasReal: ['periodoIniVendasReal','periodoFimVendasReal'],
+  Fin: ['periodoIniFin','periodoFimFin'],
+  Pedidos: ['periodoIniPedidos','periodoFimPedidos'],
+  Orc: ['periodoIniOrc','periodoFimOrc'],
+  OS: ['periodoIniOS','periodoFimOS'],
+  NF: ['periodoIniNF','periodoFimNF']
+};
+const TAB_KIND = {
+  VisaoGeral:'overview', Vendas:'davs', VendasReal:'davs', Fin:'financeiro',
+  Pedidos:'davs', Orc:'davs', OS:'ordemServico', NF:'notaFornecedor'
+};
+const tabData = {}; // tabData[key] = { loaded, ini, fim, davs, financeiro, error, errorFin }
+
+function tabPeriod(key){
+  const [iniId, fimId] = PERIOD_INPUTS[key];
+  return { ini: document.getElementById(iniId).value, fim: document.getElementById(fimId).value };
+}
+function setTabStatus(key, msg){
+  const el = document.getElementById('tpStatus'+key);
+  if(el) el.textContent = msg || '';
+}
+
+async function fetchDavsFor(ini, fim, progressLabel){
+  const q = { 'data.ge': ini, 'data.le': fim };
+  if(state.filialSelecionada) q['filial.eq'] = state.filialSelecionada;
+  return await fetchAllPaginated('/public-api/v1/davs', q,
+    n => setLoading(true, progressLabel + '… ' + n + ' registros'));
+}
+async function fetchFinFor(ini, fim){
+  const q = { 'vencimento.ge': ini, 'vencimento.le': fim };
+  return await fetchAllPaginated('/public-api/v1/documento-financeiro', q,
+    n => setLoading(true, 'Carregando financeiro… ' + n + ' registros'));
+}
+async function fetchOSFor(ini, fim){
+  const q = { 'dataOrdemServico.ge': ini, 'dataOrdemServico.le': fim };
+  return await fetchAllPaginated('/public-api/v1/ordem-servico', q,
+    n => setLoading(true, 'Carregando ordens de serviço… ' + n + ' registros'));
+}
+async function fetchNFFor(ini, fim){
+  const q = { 'dataEntrada.ge': ini, 'dataEntrada.le': fim };
+  return await fetchAllPaginated('/public-api/v1/item-nota-entrada', q,
+    n => setLoading(true, 'Carregando notas de fornecedor… ' + n + ' registros'));
+}
+async function ensureProdutosNomesFor(davs){
+  const modVis = state.modulosVisiveis || {};
+  const wantProdutos = (modVis.vendas !== false) || (modVis.vendasRealizadas !== false);
+  if(!wantProdutos) return;
+  const codigosUnicos = new Set();
+  davs.forEach(d=>(d.itens||[]).forEach(it=>{ if(it.produto && !state.produtosMap.has(String(it.produto))) codigosUnicos.add(it.produto); }));
+  if(codigosUnicos.size === 0) return;
+  setLoading(true, 'Carregando nomes de produtos…');
   try{
-    state.davs = await fetchAllPaginated('/public-api/v1/davs', davQuery,
-      n => setLoading(true, 'Carregando DAVs… ' + n + ' registros'));
+    const novos = await fetchProdutosNomes(codigosUnicos);
+    novos.forEach((nome,cod)=>state.produtosMap.set(cod, nome));
+  }catch(e){ /* segue mostrando código quando não achar o nome */ }
+}
+
+/* Busca (ou usa cache) e renderiza uma aba específica, com seu próprio período. */
+async function loadTab(key, forceReload){
+  const { ini, fim } = tabPeriod(key);
+  if(!ini || !fim){ setTabStatus(key, 'Informe o período.'); return; }
+  const cache = tabData[key];
+  if(!forceReload && cache && cache.loaded && cache.ini === ini && cache.fim === fim){
+    renderTabFromCache(key);
+    return;
+  }
+  const btn = document.getElementById('btnBuscar'+key);
+  if(btn){ btn.disabled = true; }
+  setTabStatus(key, 'Carregando…');
+  setLoading(true, 'Carregando…');
+  try{
+    const kind = TAB_KIND[key];
+    const entry = { loaded:true, ini, fim, error:null, errorFin:null };
+    if(kind === 'davs'){
+      try{ entry.davs = await fetchDavsFor(ini, fim, 'Carregando documentos'); }
+      catch(e){ entry.davs = []; entry.error = e.message; }
+      await ensureProdutosNomesFor(entry.davs);
+    } else if(kind === 'overview'){
+      try{ entry.davs = await fetchDavsFor(ini, fim, 'Carregando documentos'); }
+      catch(e){ entry.davs = []; entry.error = e.message; }
+      try{ entry.financeiro = await fetchFinFor(ini, fim); }
+      catch(e){ entry.financeiro = []; entry.errorFin = e.message; }
+    } else if(kind === 'financeiro'){
+      try{ entry.financeiro = await fetchFinFor(ini, fim); }
+      catch(e){ entry.financeiro = []; entry.error = e.message; }
+    } else if(kind === 'ordemServico'){
+      try{ entry.ordemServico = await fetchOSFor(ini, fim); }
+      catch(e){ entry.ordemServico = []; entry.error = e.message; }
+    } else if(kind === 'notaFornecedor'){
+      try{ entry.notaFornecedor = await fetchNFFor(ini, fim); }
+      catch(e){ entry.notaFornecedor = []; entry.error = e.message; }
+    }
+    tabData[key] = entry;
+    renderTabFromCache(key);
+    setTabStatus(key, 'Atualizado ' + fmtTimestamp());
   }catch(e){
-    state.davs = [];
-    state.moduleErrors.davs = e.message;
+    setTabStatus(key, 'Erro: ' + e.message);
+  }finally{
+    setLoading(false);
+    if(btn) btn.disabled = false;
   }
+}
 
-  if(wantFin){
-    setLoading(true, 'Carregando documentos financeiros…');
-    try{
-      state.financeiro = await fetchAllPaginated('/public-api/v1/documento-financeiro', finQuery,
-        n => setLoading(true, 'Carregando financeiro… ' + n + ' registros'));
-    }catch(e){
-      state.financeiro = [];
-      state.moduleErrors.financeiro = e.message;
-    }
-  } else {
-    state.financeiro = [];
+/* "Troca de contexto": aponta os globais legados (state.davs, state.financeiro...)
+   pros dados já cacheados dessa aba e chama a função de renderização dela —
+   assim cada aba renderiza só com os próprios dados/erro, sem mexer nas outras. */
+function renderTabFromCache(key){
+  const entry = tabData[key];
+  if(!entry) return;
+  const kind = TAB_KIND[key];
+  if(kind === 'davs' || kind === 'overview'){
+    state.davs = entry.davs || [];
+    state.moduleErrors.davs = entry.error || null;
   }
-
-  if(wantProdutos){
-    const codigosUnicos = new Set();
-    state.davs.forEach(d=>(d.itens||[]).forEach(it=>{ if(it.produto) codigosUnicos.add(it.produto); }));
-    setLoading(true, 'Carregando nomes de produtos…');
-    try{
-      state.produtosMap = await fetchProdutosNomes(codigosUnicos);
-    }catch(e){
-      state.produtosMap = new Map();
-      state.moduleErrors.produtos = e.message;
-    }
-  } else {
-    state.produtosMap = new Map();
+  if(kind === 'financeiro' || kind === 'overview'){
+    state.financeiro = entry.financeiro || [];
+    state.moduleErrors.financeiro = (kind==='overview' ? entry.errorFin : entry.error) || null;
   }
-
-  if(wantOS){
-    setLoading(true, 'Carregando ordens de serviço…');
-    try{
-      state.ordemServico = await fetchAllPaginated('/public-api/v1/ordem-servico',
-        { 'dataOrdemServico.ge': state.dataInicio, 'dataOrdemServico.le': state.dataFim },
-        n => setLoading(true, 'Carregando ordens de serviço… ' + n + ' registros'));
-    }catch(e){
-      state.ordemServico = [];
-      state.moduleErrors.ordemServico = e.message;
-    }
-  } else {
-    state.ordemServico = [];
+  if(kind === 'ordemServico'){
+    state.ordemServico = entry.ordemServico || [];
+    state.moduleErrors.ordemServico = entry.error || null;
   }
-
-  if(wantNF){
-    setLoading(true, 'Carregando notas fiscais de fornecedor…');
-    try{
-      state.notaFornecedor = await fetchAllPaginated('/public-api/v1/item-nota-entrada',
-        { 'dataEntrada.ge': state.dataInicio, 'dataEntrada.le': state.dataFim },
-        n => setLoading(true, 'Carregando notas de fornecedor… ' + n + ' registros'));
-    }catch(e){
-      state.notaFornecedor = [];
-      state.moduleErrors.notaFornecedor = e.message;
-    }
-  } else {
-    state.notaFornecedor = [];
+  if(kind === 'notaFornecedor'){
+    state.notaFornecedor = entry.notaFornecedor || [];
+    state.moduleErrors.notaFornecedor = entry.error || null;
   }
+  const renderFn = {
+    VisaoGeral: renderOverview, Vendas: renderVendas, VendasReal: renderVendasRealizadas,
+    Fin: renderFinanceiro, Pedidos: ()=>renderDocList(4,'Pedidos'), Orc: ()=>renderDocList(2,'Orcamentos'),
+    OS: renderOrdemServico, NF: renderNotaFornecedor
+  }[key];
+  if(renderFn) renderFn();
+  stampAllTimestamps();
+}
 
-  setLoading(false);
+function resetAllTabs(){
+  Object.keys(PERIOD_INPUTS).forEach(key=>{ delete tabData[key]; setTabStatus(key,''); });
 }
 
 /* ================= HELPERS DE AGREGAÇÃO ================= */
@@ -2255,9 +2393,15 @@ function pdfHeader(doc, title, subtitle){
   return Math.max(y+30, 96);
 }
 
-function exportTablePDF(title, headers, rows, orientation, filename){
+function tabPeriodLabel(key){
+  const t = tabData[key];
+  if(t && t.ini && t.fim) return 'Período: ' + fmtDate(t.ini) + ' a ' + fmtDate(t.fim);
+  return '';
+}
+
+function exportTablePDF(title, subtitle, headers, rows, orientation, filename){
   const doc = getJsPDF(orientation);
-  const startY = pdfHeader(doc, title, 'Período: ' + fmtDate(state.dataInicio) + ' a ' + fmtDate(state.dataFim) + '  ·  Gerado em ' + fmtTimestamp());
+  const startY = pdfHeader(doc, title, subtitle + (subtitle?'  ·  ':'') + 'Gerado em ' + fmtTimestamp());
   doc.autoTable({
     startY,
     head:[headers], body: rows,
@@ -2282,7 +2426,7 @@ function wireTableExport(prefix, headers, buildRowsFn, moneyCols, numCols, filen
   const orientSel = document.getElementById('pdfOrient'+prefix);
   const suffix = ()=> masterLenFn ? exportSuffix(prefix, masterLenFn()) : '';
   if(pdfBtn) pdfBtn.addEventListener('click', ()=>{
-    exportTablePDF(titulo, headers, rowsForPDF(buildRowsFn(), moneyCols, numCols), orientSel.value, filenameBase + suffix() + '.pdf');
+    exportTablePDF(titulo, tabPeriodLabel(prefix), headers, rowsForPDF(buildRowsFn(), moneyCols, numCols), orientSel.value, filenameBase + suffix() + '.pdf');
   });
   if(xlsxBtn) xlsxBtn.addEventListener('click', ()=>{
     exportTableExcel(titulo, headers, buildRowsFn(), filenameBase + suffix() + '.xlsx');
@@ -2446,13 +2590,24 @@ function buildFinRowsFullRaw(){
 }
 
 /* ================= NAVEGAÇÃO (sidebar) ================= */
+const VIEW_TO_TABKEY = {
+  visaoGeral:'VisaoGeral', vendas:'Vendas', vendasRealizadas:'VendasReal', financeiro:'Fin',
+  pedidos:'Pedidos', orcamentos:'Orc', ordemServico:'OS', notaFornecedor:'NF'
+};
 document.querySelectorAll('.side-nav .item').forEach(item=>{
   item.addEventListener('click', ()=>{
     document.querySelectorAll('.side-nav .item').forEach(t=>t.classList.remove('active'));
     document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
     item.classList.add('active');
     document.getElementById('view-'+item.dataset.view).classList.add('active');
+    const tabKey = VIEW_TO_TABKEY[item.dataset.view];
+    if(tabKey) loadTab(tabKey);
   });
+});
+
+Object.keys(PERIOD_INPUTS).forEach(key=>{
+  const btn = document.getElementById('btnBuscar'+key);
+  if(btn) btn.addEventListener('click', ()=>loadTab(key, true));
 });
 
 /* ================= AÇÕES DOS WIDGETS (refresh / expandir / remover) ================= */
@@ -2540,8 +2695,6 @@ async function attemptConnect(isAuto){
   state.clientId = document.getElementById('fClientId').value.trim();
   state.clientSecret = document.getElementById('fClientSecret').value.trim();
   state.basicOverride = document.getElementById('fBasic').value.trim();
-  state.dataInicio = document.getElementById('fDataIni').value;
-  state.dataFim = document.getElementById('fDataFim').value;
   state.modulosVisiveis = {};
   document.querySelectorAll('.modChk').forEach(chk=>{
     state.modulosVisiveis[chk.dataset.mod] = chk.checked;
@@ -2556,14 +2709,27 @@ async function attemptConnect(isAuto){
   const btn = document.getElementById('btnConnect');
   if(!isAuto){ btn.disabled = true; btn.textContent = 'Conectando…'; }
   try{
-    await loadAllData();
+    state.token = null;
+    await authenticate();
+    await loadEmpresaEFiliais();
+    await probeModules();
     document.getElementById('serverLabel').textContent = state.server.replace(/^https?:\/\//,'');
-    document.getElementById('topDataIni').value = state.dataInicio;
-    document.getElementById('topDataFim').value = state.dataFim;
-    renderAll();
+    resetAllTabs();
+    Object.values(PERIOD_INPUTS).forEach(([iniId,fimId])=>{
+      document.getElementById(iniId).value = d0.ini;
+      document.getElementById(fimId).value = d0.fim;
+    });
+    document.querySelectorAll('.side-nav .item').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    const visaoGeralItem = document.querySelector('.side-nav .item[data-view="visaoGeral"]');
+    if(visaoGeralItem) visaoGeralItem.classList.add('active');
+    document.getElementById('view-visaoGeral').classList.add('active');
+    applyModuleVisibility();
     wireWidgetActions();
+    wireSortableHeaders();
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('dashboard').style.display = 'block';
+    await loadTab('VisaoGeral');
     saveCreds();
     return true;
   }catch(e){
@@ -2580,21 +2746,6 @@ async function attemptConnect(isAuto){
 
 document.getElementById('btnConnect').addEventListener('click', ()=>attemptConnect(false));
 
-document.getElementById('btnReload').addEventListener('click', async ()=>{
-  state.dataInicio = document.getElementById('topDataIni').value;
-  state.dataFim = document.getElementById('topDataFim').value;
-  try{
-    await loadAllData();
-    renderAll();
-    wireWidgetActions();
-    wireSortableHeaders();
-    saveCreds();
-  }catch(e){
-    setLoading(false);
-    alert(e.message);
-  }
-});
-
 function populateFilialSelect(){
   const sel = document.getElementById('filialSelect');
   if(!sel) return;
@@ -2606,11 +2757,13 @@ function populateFilialSelect(){
 
 document.getElementById('filialSelect').addEventListener('change', async ()=>{
   state.filialSelecionada = document.getElementById('filialSelect').value;
+  // Troca de filial invalida o cache de todas as abas — a atual recarrega na
+  // hora, as outras recarregam sozinhas na próxima vez que forem abertas.
+  resetAllTabs();
+  const activeItem = document.querySelector('.side-nav .item.active');
+  const tabKey = activeItem ? VIEW_TO_TABKEY[activeItem.dataset.view] : 'VisaoGeral';
   try{
-    await loadAllData();
-    renderAll();
-    wireWidgetActions();
-    wireSortableHeaders();
+    if(tabKey) await loadTab(tabKey, true);
   }catch(e){
     setLoading(false);
     alert(e.message);
