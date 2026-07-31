@@ -676,7 +676,7 @@
             <div class="table-filter-row"><input type="text" id="filtroVendas" placeholder="Filtrar por data, DAV, cliente, vendedor ou produto..."></div>
             <div class="table-scroll">
               <table id="tblVendas" data-tablekey="Vendas">
-                <thead><tr><th class="chk-col"><input type="checkbox" id="selAllVendas" onchange="toggleSelectAll('Vendas', this.checked)"></th><th data-sort="data">Data</th><th data-sort="dav">DAV</th><th data-sort="cliente">Cliente</th><th data-sort="vendedor">Vendedor</th><th data-sort="produto">Código</th><th data-sort="produtoNome">Produto</th><th class="num" data-sort="qtd">Qtd</th><th class="num" data-sort="precoUnit">Preço unit.</th><th class="num" data-sort="total">Total item</th></tr></thead>
+                <thead><tr><th class="chk-col"><input type="checkbox" id="selAllVendas" onchange="toggleSelectAll('Vendas', this.checked)"></th><th data-sort="data">Data</th><th data-sort="dav">DAV</th><th data-sort="cliente">Cliente</th><th data-sort="vendedor">Vendedor</th><th data-sort="produto">Código</th><th data-sort="produtoNome">Produto</th><th class="num" data-sort="qtd">Qtd</th><th class="num" data-sort="precoUnit">Preço unit.</th><th class="num" data-sort="total">Total item</th><th data-sort="status">Status</th></tr></thead>
                 <tbody></tbody>
               </table>
             </div>
@@ -743,7 +743,7 @@
             <div class="table-filter-row"><input type="text" id="filtroVendasReal" placeholder="Filtrar por data, DAV, cliente, vendedor ou produto..."></div>
             <div class="table-scroll">
               <table id="tblVendasReal" data-tablekey="VendasReal">
-                <thead><tr><th class="chk-col"><input type="checkbox" id="selAllVendasReal" onchange="toggleSelectAll('VendasReal', this.checked)"></th><th data-sort="data">Data</th><th data-sort="dav">DAV</th><th data-sort="cliente">Cliente</th><th data-sort="vendedor">Vendedor</th><th data-sort="produto">Código</th><th data-sort="produtoNome">Produto</th><th class="num" data-sort="qtd">Qtd</th><th class="num" data-sort="precoUnit">Preço unit.</th><th class="num" data-sort="total">Total item</th></tr></thead>
+                <thead><tr><th class="chk-col"><input type="checkbox" id="selAllVendasReal" onchange="toggleSelectAll('VendasReal', this.checked)"></th><th data-sort="data">Data</th><th data-sort="dav">DAV</th><th data-sort="cliente">Cliente</th><th data-sort="vendedor">Vendedor</th><th data-sort="produto">Código</th><th data-sort="produtoNome">Produto</th><th class="num" data-sort="qtd">Qtd</th><th class="num" data-sort="precoUnit">Preço unit.</th><th class="num" data-sort="total">Total item</th><th data-sort="status">Status</th></tr></thead>
                 <tbody></tbody>
               </table>
             </div>
@@ -1611,7 +1611,8 @@ function flattenItens(filterFn){
       rows.push({
         data:d.data, dav:d.codigo, cliente:d.nomeCliente||d.cliente||'—', vendedor:d.nomeVendedor||d.vendedor||'—',
         produto:it.produto, produtoNome:produtoNome(it.produto), produtoLabel:produtoLabel(it.produto),
-        qtd:it.quantidade, precoUnit:it.precoUnitario, total: it.precoTotal!=null?it.precoTotal:(it.precoUnitario*it.quantidade)
+        qtd:it.quantidade, precoUnit:it.precoUnitario, total: it.precoTotal!=null?it.precoTotal:(it.precoUnitario*it.quantidade),
+        status:d.status
       });
     });
   });
@@ -1714,8 +1715,13 @@ function renderVendasRealTable(rows){
     '<tr data-rowkey="VendasReal-'+r._id+'" class="'+(tableSelection.VendasReal.has(r._id)?'row-selected':'')+'">'+
     '<td class="chk-col"><input type="checkbox" class="rowchk-VendasReal" data-id="'+r._id+'" '+(tableSelection.VendasReal.has(r._id)?'checked':'')+' onchange="toggleRowSelection(\'VendasReal\', '+r._id+', this.checked)"></td>'+
     '<td>'+fmtDate(r.data)+'</td><td>'+r.dav+'</td><td>'+esc(r.cliente)+'</td><td>'+esc(r.vendedor)+'</td>'+
-    '<td>'+esc(r.produto)+'</td><td>'+esc(r.produtoNome || r.produto)+'</td><td class="num">'+fmtNum(r.qtd)+'</td><td class="num">'+fmtMoney(r.precoUnit)+'</td><td class="num">'+fmtMoney(r.total)+'</td></tr>'
-  ).join('') || '<tr><td colspan="10" class="empty-note">Nenhuma venda faturada encontrada.</td></tr>';
+    '<td>'+esc(r.produto)+'</td><td>'+esc(r.produtoNome || r.produto)+'</td><td class="num">'+fmtNum(r.qtd)+'</td><td class="num">'+fmtMoney(r.precoUnit)+'</td><td class="num">'+fmtMoney(r.total)+'</td><td>'+statusDavPill(r.status)+'</td></tr>'
+  ).join('') || '<tr><td colspan="11" class="empty-note">Nenhuma venda faturada encontrada.</td></tr>';
+}
+
+function statusDavPill(status){
+  const stClass = CANCEL_STATUSES.has(status) ? 'cancel' : ([4,7,8,17].includes(status) ? 'done' : 'open');
+  return '<span class="pill '+stClass+'">'+(STATUS_DAV[status]||status)+'</span>';
 }
 
 function renderVendasTable(rows){
@@ -1726,8 +1732,8 @@ function renderVendasTable(rows){
     '<tr data-rowkey="Vendas-'+r._id+'" class="'+(tableSelection.Vendas.has(r._id)?'row-selected':'')+'">'+
     '<td class="chk-col"><input type="checkbox" class="rowchk-Vendas" data-id="'+r._id+'" '+(tableSelection.Vendas.has(r._id)?'checked':'')+' onchange="toggleRowSelection(\'Vendas\', '+r._id+', this.checked)"></td>'+
     '<td>'+fmtDate(r.data)+'</td><td>'+r.dav+'</td><td>'+esc(r.cliente)+'</td><td>'+esc(r.vendedor)+'</td>'+
-    '<td>'+esc(r.produto)+'</td><td>'+esc(r.produtoNome || r.produto)+'</td><td class="num">'+fmtNum(r.qtd)+'</td><td class="num">'+fmtMoney(r.precoUnit)+'</td><td class="num">'+fmtMoney(r.total)+'</td></tr>'
-  ).join('') || '<tr><td colspan="10" class="empty-note">Nenhum item encontrado.</td></tr>';
+    '<td>'+esc(r.produto)+'</td><td>'+esc(r.produtoNome || r.produto)+'</td><td class="num">'+fmtNum(r.qtd)+'</td><td class="num">'+fmtMoney(r.precoUnit)+'</td><td class="num">'+fmtMoney(r.total)+'</td><td>'+statusDavPill(r.status)+'</td></tr>'
+  ).join('') || '<tr><td colspan="11" class="empty-note">Nenhum item encontrado.</td></tr>';
 }
 
 /* ================= RENDER: FINANCEIRO ================= */
@@ -2042,14 +2048,14 @@ function downloadCSV(content, filename){
 
 document.getElementById('exportVendas').addEventListener('click', ()=>{
   const rows = getExportRows('Vendas');
-  const csv = toCSV(rows, ['Data','DAV','Cliente','Vendedor','CodigoProduto','NomeProduto','Quantidade','PrecoUnitario','Total'],
-    r=>[fmtDate(r.data),r.dav,r.cliente,r.vendedor,r.produto,r.produtoNome||'',r.qtd,r.precoUnit,r.total]);
+  const csv = toCSV(rows, ['Data','DAV','Cliente','Vendedor','CodigoProduto','NomeProduto','Quantidade','PrecoUnitario','Total','Status'],
+    r=>[fmtDate(r.data),r.dav,r.cliente,r.vendedor,r.produto,r.produtoNome||'',r.qtd,r.precoUnit,r.total,STATUS_DAV[r.status]||r.status]);
   downloadCSV(csv, 'vendas_detalhadas' + exportSuffix('Vendas', (window.__vendasRowsFull||[]).length) + '.csv');
 });
 document.getElementById('exportVendasReal').addEventListener('click', ()=>{
   const rows = getExportRows('VendasReal');
-  const csv = toCSV(rows, ['Data','DAV','Cliente','Vendedor','CodigoProduto','NomeProduto','Quantidade','PrecoUnitario','Total'],
-    r=>[fmtDate(r.data),r.dav,r.cliente,r.vendedor,r.produto,r.produtoNome||'',r.qtd,r.precoUnit,r.total]);
+  const csv = toCSV(rows, ['Data','DAV','Cliente','Vendedor','CodigoProduto','NomeProduto','Quantidade','PrecoUnitario','Total','Status'],
+    r=>[fmtDate(r.data),r.dav,r.cliente,r.vendedor,r.produto,r.produtoNome||'',r.qtd,r.precoUnit,r.total,STATUS_DAV[r.status]||r.status]);
   downloadCSV(csv, 'vendas_realizadas' + exportSuffix('VendasReal', (window.__vendasRealRowsFull||[]).length) + '.csv');
 });
 document.getElementById('exportFin').addEventListener('click', ()=>{
@@ -2084,17 +2090,17 @@ document.getElementById('exportNF').addEventListener('click', ()=>{
 });
 
 /* ================= EXPORTAÇÃO PDF / EXCEL ================= */
-const VENDAS_HEADERS = ['Data','DAV','Cliente','Vendedor','Código','Produto','Qtd','Preço unit.','Total'];
+const VENDAS_HEADERS = ['Data','DAV','Cliente','Vendedor','Código','Produto','Qtd','Preço unit.','Total','Status'];
 const FIN_HEADERS = ['Documento','Entidade','Tipo','Emissão','Vencimento','Valor','Saldo','Status'];
 const DOC_HEADERS = ['Código','Data','Cliente','Vendedor','Valor','Status'];
 const OS_HEADERS = ['Código','Data','Cliente','Atendente','Produtos','Serviços','Total','Status'];
 const NF_HEADERS = ['Data entrada','Nota','Modelo','Fornecedor','Produto','Valor do item','Total do item','Total da nota'];
 
 function buildVendasRowsRaw(){
-  return getExportRows('Vendas').map(r=>[fmtDate(r.data), r.dav, r.cliente, r.vendedor, r.produto, r.produtoNome || r.produto, r.qtd||0, r.precoUnit||0, r.total||0]);
+  return getExportRows('Vendas').map(r=>[fmtDate(r.data), r.dav, r.cliente, r.vendedor, r.produto, r.produtoNome || r.produto, r.qtd||0, r.precoUnit||0, r.total||0, STATUS_DAV[r.status]||r.status]);
 }
 function buildVendasRealRowsRaw(){
-  return getExportRows('VendasReal').map(r=>[fmtDate(r.data), r.dav, r.cliente, r.vendedor, r.produto, r.produtoNome || r.produto, r.qtd||0, r.precoUnit||0, r.total||0]);
+  return getExportRows('VendasReal').map(r=>[fmtDate(r.data), r.dav, r.cliente, r.vendedor, r.produto, r.produtoNome || r.produto, r.qtd||0, r.precoUnit||0, r.total||0, STATUS_DAV[r.status]||r.status]);
 }
 function buildFinRowsRaw(){
   return getExportRows('Fin').map(f=>[
@@ -2264,7 +2270,8 @@ const SORT_ACCESSORS = {
     data:{fn:r=>r.data, numeric:false}, dav:{fn:r=>r.dav, numeric:true},
     cliente:{fn:r=>r.cliente, numeric:false}, vendedor:{fn:r=>r.vendedor, numeric:false},
     produto:{fn:r=>r.produto, numeric:false}, produtoNome:{fn:r=>r.produtoNome||r.produto, numeric:false},
-    qtd:{fn:r=>r.qtd, numeric:true}, precoUnit:{fn:r=>r.precoUnit, numeric:true}, total:{fn:r=>r.total, numeric:true}
+    qtd:{fn:r=>r.qtd, numeric:true}, precoUnit:{fn:r=>r.precoUnit, numeric:true}, total:{fn:r=>r.total, numeric:true},
+    status:{fn:r=>STATUS_DAV[r.status]||r.status, numeric:false}
   },
   Fin: {
     documento:{fn:f=>f.documento||f.id, numeric:false}, nomeEntidade:{fn:f=>f.nomeEntidade, numeric:false},
@@ -2353,10 +2360,10 @@ function wireSortableHeaders(){
 wireSortableHeaders();
 
 function buildVendasRowsFullRaw(){
-  return (window.__vendasRowsFull || []).map(r=>[fmtDate(r.data), r.dav, r.cliente, r.vendedor, r.produto, r.produtoNome || r.produto, r.qtd||0, r.precoUnit||0, r.total||0]);
+  return (window.__vendasRowsFull || []).map(r=>[fmtDate(r.data), r.dav, r.cliente, r.vendedor, r.produto, r.produtoNome || r.produto, r.qtd||0, r.precoUnit||0, r.total||0, STATUS_DAV[r.status]||r.status]);
 }
 function buildVendasRealRowsFullRaw(){
-  return (window.__vendasRealRowsFull || []).map(r=>[fmtDate(r.data), r.dav, r.cliente, r.vendedor, r.produto, r.produtoNome || r.produto, r.qtd||0, r.precoUnit||0, r.total||0]);
+  return (window.__vendasRealRowsFull || []).map(r=>[fmtDate(r.data), r.dav, r.cliente, r.vendedor, r.produto, r.produtoNome || r.produto, r.qtd||0, r.precoUnit||0, r.total||0, STATUS_DAV[r.status]||r.status]);
 }
 function buildFinRowsFullRaw(){
   return state.financeiro.map(f=>[
