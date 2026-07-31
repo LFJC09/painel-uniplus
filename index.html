@@ -99,6 +99,18 @@
   .ug-hint{ font-size:11px; color:#a7b0b6; margin-top:5px; line-height:1.4; }
   .ug-illustration{ position:absolute; left:0; right:0; bottom:0; width:100%; line-height:0; z-index:1; }
 
+  .mod-list{ border:1px solid #e4e8ea; border-radius:6px; overflow:hidden; }
+  .mod-row{
+    display:flex; align-items:center; gap:10px; padding:10px 14px; font-size:13px; color:#2b3540;
+    cursor:pointer; border-bottom:1px solid #eef1f2;
+  }
+  .mod-row:last-child{ border-bottom:none; }
+  .mod-row:hover{ background:#f7f9fa; }
+  .mod-row input[type=checkbox]{
+    width:16px; height:16px; flex:0 0 16px; margin:0; accent-color:#2b7fb8; cursor:pointer;
+  }
+  .mod-row span{ flex:1 1 auto; text-align:left; }
+
   /* ---------- variante "solo" (tela de Conectar / Conta e Chave) ---------- */
   .ug-card-solo{ flex-direction:column; width:min(480px,92vw); }
   .ug-solo-head{ padding:30px 32px 6px; border-bottom:1px solid #eef1f2; margin-bottom:22px; }
@@ -521,28 +533,14 @@
         <summary>Personalizar menu — escolha o que aparece no painel</summary>
         <div class="ug-subfield">
           <div class="ug-hint" style="margin:0 0 10px;">Desmarque os módulos que esse cliente não usa. Fica salvo e some do menu lateral.</div>
-          <div style="display:flex;flex-direction:column;gap:8px;">
-            <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#2b3540;cursor:pointer;">
-              <input type="checkbox" class="modChk" data-mod="vendas" checked> Vendas não realizadas
-            </label>
-            <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#2b3540;cursor:pointer;">
-              <input type="checkbox" class="modChk" data-mod="vendasRealizadas" checked> Vendas realizadas
-            </label>
-            <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#2b3540;cursor:pointer;">
-              <input type="checkbox" class="modChk" data-mod="financeiro" checked> Financeiro
-            </label>
-            <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#2b3540;cursor:pointer;">
-              <input type="checkbox" class="modChk" data-mod="pedidos" checked> Pedidos
-            </label>
-            <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#2b3540;cursor:pointer;">
-              <input type="checkbox" class="modChk" data-mod="orcamentos" checked> Orçamentos
-            </label>
-            <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#2b3540;cursor:pointer;">
-              <input type="checkbox" class="modChk" data-mod="ordemServico" checked> Ordens de serviço
-            </label>
-            <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#2b3540;cursor:pointer;">
-              <input type="checkbox" class="modChk" data-mod="notaFornecedor" checked> Notas de fornecedor
-            </label>
+          <div class="mod-list">
+            <label class="mod-row"><input type="checkbox" class="modChk" data-mod="vendas" checked><span>Vendas não realizadas</span></label>
+            <label class="mod-row"><input type="checkbox" class="modChk" data-mod="vendasRealizadas" checked><span>Vendas realizadas</span></label>
+            <label class="mod-row"><input type="checkbox" class="modChk" data-mod="financeiro" checked><span>Financeiro</span></label>
+            <label class="mod-row"><input type="checkbox" class="modChk" data-mod="pedidos" checked><span>Pedidos</span></label>
+            <label class="mod-row"><input type="checkbox" class="modChk" data-mod="orcamentos" checked><span>Orçamentos</span></label>
+            <label class="mod-row"><input type="checkbox" class="modChk" data-mod="ordemServico" checked><span>Ordens de serviço</span></label>
+            <label class="mod-row"><input type="checkbox" class="modChk" data-mod="notaFornecedor" checked><span>Notas de fornecedor</span></label>
           </div>
         </div>
       </details>
@@ -623,7 +621,7 @@
         <div class="item" data-view="notaFornecedor"><span class="ic"></span>NOTAS DE FORNECEDOR</div>
       </nav>
       <div class="side-foot">
-        <div class="item">⚙ CONFIGURAÇÕES</div>
+        <div class="item" id="btnConfiguracoes">⚙ CONFIGURAÇÕES</div>
         <div class="item" style="cursor:default;font-size:10px;">Build 2026.07.31</div>
       </div>
     </aside>
@@ -1403,6 +1401,11 @@ async function loadAllData(){
   const davQuery = {};
   if(state.filialSelecionada) davQuery['filial.eq'] = state.filialSelecionada;
   const finQuery = {};
+  const modVis = state.modulosVisiveis || {};
+  const wantFin = modVis.financeiro !== false;
+  const wantOS = modVis.ordemServico !== false;
+  const wantNF = modVis.notaFornecedor !== false;
+  const wantProdutos = (modVis.vendas !== false) || (modVis.vendasRealizadas !== false);
 
   await authenticate();
   state.moduleErrors = {};
@@ -1440,41 +1443,57 @@ async function loadAllData(){
     state.moduleErrors.davs = e.message;
   }
 
-  setLoading(true, 'Carregando documentos financeiros…');
-  try{
-    state.financeiro = await fetchAllPaginatedByDay('/public-api/v1/documento-financeiro', finQuery, 'vencimento', state.dataInicio, state.dataFim,
-      (n,d,total) => setLoading(true, 'Carregando financeiro… ' + n + ' registros (dia ' + d + ' de ' + total + ')'));
-  }catch(e){
+  if(wantFin){
+    setLoading(true, 'Carregando documentos financeiros…');
+    try{
+      state.financeiro = await fetchAllPaginatedByDay('/public-api/v1/documento-financeiro', finQuery, 'vencimento', state.dataInicio, state.dataFim,
+        (n,d,total) => setLoading(true, 'Carregando financeiro… ' + n + ' registros (dia ' + d + ' de ' + total + ')'));
+    }catch(e){
+      state.financeiro = [];
+      state.moduleErrors.financeiro = e.message;
+    }
+  } else {
     state.financeiro = [];
-    state.moduleErrors.financeiro = e.message;
   }
 
-  const codigosUnicos = new Set();
-  state.davs.forEach(d=>(d.itens||[]).forEach(it=>{ if(it.produto) codigosUnicos.add(it.produto); }));
-  setLoading(true, 'Carregando nomes de produtos…');
-  try{
-    state.produtosMap = await fetchProdutosNomes(codigosUnicos);
-  }catch(e){
+  if(wantProdutos){
+    const codigosUnicos = new Set();
+    state.davs.forEach(d=>(d.itens||[]).forEach(it=>{ if(it.produto) codigosUnicos.add(it.produto); }));
+    setLoading(true, 'Carregando nomes de produtos…');
+    try{
+      state.produtosMap = await fetchProdutosNomes(codigosUnicos);
+    }catch(e){
+      state.produtosMap = new Map();
+      state.moduleErrors.produtos = e.message;
+    }
+  } else {
     state.produtosMap = new Map();
-    state.moduleErrors.produtos = e.message;
   }
 
-  setLoading(true, 'Carregando ordens de serviço…');
-  try{
-    state.ordemServico = await fetchAllPaginatedByDay('/public-api/v1/ordem-servico', {}, 'dataOrdemServico', state.dataInicio, state.dataFim,
-      (n,d,total) => setLoading(true, 'Carregando ordens de serviço… ' + n + ' registros (dia ' + d + ' de ' + total + ')'));
-  }catch(e){
+  if(wantOS){
+    setLoading(true, 'Carregando ordens de serviço…');
+    try{
+      state.ordemServico = await fetchAllPaginatedByDay('/public-api/v1/ordem-servico', {}, 'dataOrdemServico', state.dataInicio, state.dataFim,
+        (n,d,total) => setLoading(true, 'Carregando ordens de serviço… ' + n + ' registros (dia ' + d + ' de ' + total + ')'));
+    }catch(e){
+      state.ordemServico = [];
+      state.moduleErrors.ordemServico = e.message;
+    }
+  } else {
     state.ordemServico = [];
-    state.moduleErrors.ordemServico = e.message;
   }
 
-  setLoading(true, 'Carregando notas fiscais de fornecedor…');
-  try{
-    state.notaFornecedor = await fetchAllPaginatedByDay('/public-api/v1/item-nota-entrada', {}, 'dataEntrada', state.dataInicio, state.dataFim,
-      (n,d,total) => setLoading(true, 'Carregando notas de fornecedor… ' + n + ' registros (dia ' + d + ' de ' + total + ')'));
-  }catch(e){
+  if(wantNF){
+    setLoading(true, 'Carregando notas fiscais de fornecedor…');
+    try{
+      state.notaFornecedor = await fetchAllPaginatedByDay('/public-api/v1/item-nota-entrada', {}, 'dataEntrada', state.dataInicio, state.dataFim,
+        (n,d,total) => setLoading(true, 'Carregando notas de fornecedor… ' + n + ' registros (dia ' + d + ' de ' + total + ')'));
+    }catch(e){
+      state.notaFornecedor = [];
+      state.moduleErrors.notaFornecedor = e.message;
+    }
+  } else {
     state.notaFornecedor = [];
-    state.moduleErrors.notaFornecedor = e.message;
   }
 
   setLoading(false);
@@ -2608,6 +2627,13 @@ document.getElementById('btnLogout').addEventListener('click', ()=>{
   document.getElementById('mgPass').value = '';
   document.getElementById('dashboard').style.display = 'none';
   showMasterGate();
+});
+
+document.getElementById('btnConfiguracoes').addEventListener('click', ()=>{
+  // Volta pra tela de conexão (servidor/conta/módulos) sem apagar nada — é só
+  // pra revisar/ajustar e clicar em "Conectar e carregar painel" de novo.
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
 });
 
 /* ================= RECONEXÃO AUTOMÁTICA AO ABRIR ================= */
